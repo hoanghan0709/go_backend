@@ -3,7 +3,7 @@ package database
 import (
 	"log"
 
-	"github.com/han/go-ecommerce/internal/models"
+	module "github.com/han/go-ecommerce/internal/module"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -41,12 +41,12 @@ func autoMigrate() {
 }
 func getModels() []interface{} {
 	return []interface{}{
-		&models.Category{},
-		&models.Question{},
-		&models.Answer{},
-		&models.Test{},
-		&models.User{},
-		&models.ExamSession{},
-		&models.UserAnswer{},
+		&module.Category{},
+		&module.Question{},
+		&module.Answer{},
+		&module.Test{},
+		&module.User{},
+		&module.ExamSession{},
+		&module.UserAnswer{},
 	}
 }

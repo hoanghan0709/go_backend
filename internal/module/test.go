@@ -1,4 +1,4 @@
-package models
+package module
 
 type Test struct {
 	ID    uint   `gorm:"primaryKey"`

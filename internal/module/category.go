@@ -1,4 +1,4 @@
-package models
+package module
 
 type Category struct {
 	ID   uint   `gorm:"primaryKey"`

@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"github.com/han/go-ecommerce/internal/database"
-	"github.com/han/go-ecommerce/internal/models"
+	models "github.com/han/go-ecommerce/internal/module"
 )
 
 func main() {
