@@ -4,6 +4,7 @@ import (
 	"log"
 
 	module "github.com/han/go-ecommerce/internal/module"
+	"github.com/han/go-ecommerce/internal/module/auth"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -12,7 +13,7 @@ import (
 var DB *gorm.DB
 
 // InitDB khởi tạo kết nối và thực hiện tự động tạo bảng
-func InitDB(filepath string) {
+func InitDB(filepath string) *gorm.DB {
 	var err error
 
 	// Khởi tạo kết nối gorm
@@ -25,6 +26,7 @@ func InitDB(filepath string) {
 
 	// Tự động tạo bảng (Migration)
 	autoMigrate()
+	return DB
 }
 func autoMigrate() {
 	log.Println("Đang tự động đồng bộ cấu trúc bảng (AutoMigrate)...")
@@ -45,7 +47,7 @@ func getModels() []interface{} {
 		&module.Question{},
 		&module.Answer{},
 		&module.Test{},
-		&module.User{},
+		&auth.User{},
 		&module.ExamSession{},
 		&module.UserAnswer{},
 	}
