@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"errors"
+	// "errors"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -18,13 +18,22 @@ func NewService(repository *Repository) *Service {
 	}
 }
 
-func (s *Service) Register(req RegisterRequest) error {
+type BaseResponse struct {
+	StatusCode int         `json:"statusCode"`
+	Message    string      `json:"message"`
+	Data       interface{} `json:"data,omitempty"`
+}
+
+func (s *Service) Register(req RegisterRequest) BaseResponse {
 
 	user, err := s.repository.FindByEmail(req.Email)
 
 	if err == nil && user != nil {
-
-		return errors.New("email already exists")
+		return BaseResponse{
+			StatusCode: 400,
+			Message:    "Email already exists",
+			Data:       nil,
+		}
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword(
@@ -36,7 +45,11 @@ func (s *Service) Register(req RegisterRequest) error {
 
 	if err != nil {
 
-		return err
+		return BaseResponse{
+			StatusCode: 500,
+			Message:    "Cannot hash password",
+			Data:       nil,
+		}
 	}
 
 	user = &User{
@@ -47,6 +60,20 @@ func (s *Service) Register(req RegisterRequest) error {
 
 		Password: string(hashedPassword),
 	}
-
-	return s.repository.Create(user)
+	if err := s.repository.Create(user); err != nil {
+		return BaseResponse{
+			StatusCode: 500,
+			Message:    "Cannot create user",
+			Data:       nil,
+		}
+	}
+	return BaseResponse{
+		StatusCode: 201,
+		Message:    "Register success",
+		Data: map[string]interface{}{
+			"id":    user.ID,
+			"name":  user.Name,
+			"email": user.Email,
+		},
+	}
 }

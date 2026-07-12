@@ -10,7 +10,7 @@
 package auth
 
 import (
-	"net/http"
+	// "net/http"
 
 	"github.com/gin-gonic/gin"
 )
@@ -30,37 +30,34 @@ func (h *Handler) Register(c *gin.Context) {
 
 	var req RegisterRequest
 
+	// if err := c.ShouldBindJSON(&req); err != nil {
+	// 	c.JSON(http.StatusBadRequest,
+	// 		gin.H{
+	// 			"message": err.Error(),
+	// 		})
+	// 	return
+	// }
+
 	if err := c.ShouldBindJSON(&req); err != nil {
-
-		c.JSON(http.StatusBadRequest,
-
-			gin.H{
-
-				"message": err.Error(),
-			})
-
+		c.JSON(400, BaseResponse{
+			StatusCode: 400,
+			Message:    "Invalid request",
+		})
 		return
 	}
-
-	if err := h.service.Register(req); err != nil {
-
-		c.JSON(http.StatusBadRequest,
-
-			gin.H{
-
-				"message": err.Error(),
-			})
-
-		return
-	}
-
-	c.JSON(
-
-		http.StatusCreated,
-
-		gin.H{
-
-			"message": "register success",
-		},
-	)
+	response := h.service.Register(req)
+	c.JSON(response.StatusCode, response)
+	// if err := h.service.Register(req); err != nil {
+	// 	c.JSON(http.StatusBadRequest,
+	// 		gin.H{
+	// 			"message": err.Error(),
+	// 		})
+	// 	return
+	// }
+	// c.JSON(
+	// 	http.StatusCreated,
+	// 	gin.H{
+	// 		"message": "register success",
+	// 	},
+	// )
 }
