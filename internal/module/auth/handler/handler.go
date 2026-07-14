@@ -7,19 +7,20 @@
 // 3. Gọi Service
 
 // 4. Trả Response
-package auth
+package handler
 
 import (
 	// "net/http"
-
 	"github.com/gin-gonic/gin"
+	"github.com/han/go-ecommerce/internal/module/auth/dto"
+	sv "github.com/han/go-ecommerce/internal/module/auth/service"
 )
 
 type Handler struct {
-	service *Service
+	service *sv.Service
 }
 
-func NewHandler(service *Service) *Handler {
+func NewHandler(service *sv.Service) *Handler {
 	return &Handler{
 		service: service,
 	}
@@ -28,7 +29,7 @@ func NewHandler(service *Service) *Handler {
 // logic
 func (h *Handler) Register(c *gin.Context) {
 
-	var req RegisterRequest
+	var req dto.RegisterRequest
 
 	// if err := c.ShouldBindJSON(&req); err != nil {
 	// 	c.JSON(http.StatusBadRequest,
@@ -39,7 +40,8 @@ func (h *Handler) Register(c *gin.Context) {
 	// }
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(400, BaseResponse{
+		c.JSON(400, sv.
+			BaseResponse{
 			StatusCode: 400,
 			Message:    "Invalid request",
 		})

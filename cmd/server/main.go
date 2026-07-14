@@ -4,47 +4,25 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
-	db "github.com/han/go-ecommerce/internal/database"
-
-	// models "github.com/han/go-ecommerce/internal/module"
-	auth "github.com/han/go-ecommerce/internal/module/auth"
+	"github.com/han/go-ecommerce/internal/module/auth/database"
+	handler "github.com/han/go-ecommerce/internal/module/auth/handler"
+	auth "github.com/han/go-ecommerce/internal/module/auth/repository"
+	router "github.com/han/go-ecommerce/internal/module/auth/router"
+	service "github.com/han/go-ecommerce/internal/module/auth/service"
 )
 
 func main() {
-	database := db.InitDB("gorm.db")
-
-	// err := db.DB.Create(
-	// 	&models.User{
-	// 		Name:     "Alice1",
-	// 		Email:    "alice@example.com",
-	// 		Password: "amjl-1234567890",
-	// 	},
-	// ).Error
-
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-
-	// r := gin.Default()
-
-	// r.GET("/aa", func(c *gin.Context) {
-	// 	c.JSON(200, gin.H{
-	// 		"status": "ok",
-	// 	})
-	// })
-
-	// r.Run(":8080")
-
+	database := database.InitDB("gorm.db")
 	log.Println("User created successfully")
 
 	// khởi tạo Gin
 	r := gin.Default()
 	// dependency injection
 	authRepository := auth.NewRepository(database)
-	authService := auth.NewService(authRepository)
-	authHandler := auth.NewHandler(authService)
+	authService := service.NewService(authRepository)
+	authHandler := handler.NewHandler(authService)
 
-	auth.RegisterRoutes(r, authHandler)
+	router.RegisterRoutes(r, authHandler)
 
 	log.Println("Server started at :8080")
 

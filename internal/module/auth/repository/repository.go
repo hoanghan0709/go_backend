@@ -1,6 +1,9 @@
-package auth
+package repository
 
-import "gorm.io/gorm"
+import (
+	"github.com/han/go-ecommerce/internal/module/auth/model"
+	"gorm.io/gorm"
+)
 
 type Repository struct {
 	db *gorm.DB
@@ -13,13 +16,13 @@ func NewRepository(db *gorm.DB) *Repository {
 		db: db,
 	}
 }
-func (r *Repository) Create(user *User) error {
+func (r *Repository) Create(user *model.User) error {
 
 	return r.db.Create(user).Error
 }
-func (r *Repository) FindByEmail(email string) (*User, error) {
+func (r *Repository) FindByEmail(email string) (*model.User, error) {
 
-	var user User
+	var user model.User
 
 	err := r.db.Where("email = ?", email).First(&user).Error
 

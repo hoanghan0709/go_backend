@@ -4,7 +4,9 @@ import (
 	"log"
 
 	module "github.com/han/go-ecommerce/internal/module"
-	"github.com/han/go-ecommerce/internal/module/auth"
+	auth "github.com/han/go-ecommerce/internal/module/auth/model"
+
+	// "github.com/han/go-ecommerce/internal/module/auth"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -14,6 +16,7 @@ var DB *gorm.DB
 
 // InitDB khởi tạo kết nối và thực hiện tự động tạo bảng
 func InitDB(filepath string) *gorm.DB {
+
 	var err error
 
 	// Khởi tạo kết nối gorm

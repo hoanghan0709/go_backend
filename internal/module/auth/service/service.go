@@ -1,16 +1,18 @@
-package auth
+package service
 
 import (
 	// "errors"
-
+	"github.com/han/go-ecommerce/internal/module/auth/dto"
+	"github.com/han/go-ecommerce/internal/module/auth/model"
+	"github.com/han/go-ecommerce/internal/module/auth/repository"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type Service struct {
-	repository *Repository
+	repository *repository.Repository
 }
 
-func NewService(repository *Repository) *Service {
+func NewService(repository *repository.Repository) *Service {
 
 	return &Service{
 
@@ -24,7 +26,7 @@ type BaseResponse struct {
 	Data       interface{} `json:"data,omitempty"`
 }
 
-func (s *Service) Register(req RegisterRequest) BaseResponse {
+func (s *Service) Register(req dto.RegisterRequest) BaseResponse {
 
 	user, err := s.repository.FindByEmail(req.Email)
 
@@ -52,7 +54,7 @@ func (s *Service) Register(req RegisterRequest) BaseResponse {
 		}
 	}
 
-	user = &User{
+	user = &model.User{
 
 		Name: req.Name,
 
