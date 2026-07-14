@@ -15,9 +15,7 @@ func RegisterRoutes(
 	auth := r.Group("/auth")
 
 	auth.POST(
-
 		"/register",
-
 		handler.Register,
 	)
 }

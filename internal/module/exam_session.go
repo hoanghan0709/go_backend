@@ -1,12 +1,16 @@
 package module
 
-import "time"
+import (
+	"time"
+
+	"github.com/han/go-ecommerce/internal/module/auth/model"
+)
 
 type ExamSession struct {
 	ID uint `gorm:"primaryKey"`
 
 	UserID uint
-	User   User
+	User   model.User
 
 	TestID uint
 	Test   Test
