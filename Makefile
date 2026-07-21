@@ -52,6 +52,9 @@ var ErrNotFound = errors.New("not found")\n' \
 > internal/$(name)/errors/errors.go
 
 	@echo "✅ Feature $(name) created."
+
+
+	
 	.PHONY: common
 
 common:
