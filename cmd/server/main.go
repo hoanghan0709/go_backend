@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
-	"github.com/han/go-ecommerce/internal/module/auth/database"
+	"github.com/han/go-ecommerce/internal/database"
 	handler "github.com/han/go-ecommerce/internal/module/auth/handler"
 	auth "github.com/han/go-ecommerce/internal/module/auth/repository"
 	router "github.com/han/go-ecommerce/internal/module/auth/router"
