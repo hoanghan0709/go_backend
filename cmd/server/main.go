@@ -27,6 +27,6 @@ func main() {
 	log.Println("Server started at :8080")
 
 	if err := r.Run(":8080"); err != nil {
-		log.Fatalf("server stopped: %v", err)
+		log.Fatalf("server stopped:s %v", err)
 	}
 }
