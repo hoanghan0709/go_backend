@@ -12,13 +12,13 @@ import (
 )
 
 func main() {
-	database := database.InitDB("gorm.db")
-	log.Println("User created successfully")
+	db, err := database.InitDB("gorm.db")
+	if err != nil {
+		log.Fatalf("cannot initialize database: %v", err)
+	}
 
-	// khởi tạo Gin
 	r := gin.Default()
-	// dependency injection
-	authRepository := auth.NewRepository(database)
+	authRepository := auth.NewRepository(db)
 	authService := service.NewService(authRepository)
 	authHandler := handler.NewHandler(authService)
 
@@ -26,6 +26,7 @@ func main() {
 
 	log.Println("Server started at :8080")
 
-	r.Run(":8080")
-
+	if err := r.Run(":8080"); err != nil {
+		log.Fatalf("server stopped: %v", err)
+	}
 }

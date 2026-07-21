@@ -18,4 +18,6 @@ func RegisterRoutes(
 		"/register",
 		handler.Register,
 	)
+	auth.GET("/getProfile/:id",
+		handler.GetUser)
 }
