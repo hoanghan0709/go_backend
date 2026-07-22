@@ -4,25 +4,24 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
+	"github.com/han/go-ecommerce/internal/auth/delivery"
+	"github.com/han/go-ecommerce/internal/auth/repository"
+	"github.com/han/go-ecommerce/internal/auth/usecase"
 	"github.com/han/go-ecommerce/internal/database"
-	handler "github.com/han/go-ecommerce/internal/module/auth/handler"
-	auth "github.com/han/go-ecommerce/internal/module/auth/repository"
-	router "github.com/han/go-ecommerce/internal/module/auth/router"
-	service "github.com/han/go-ecommerce/internal/module/auth/service"
 )
 
 func main() {
 	db, err := database.InitDB("gorm.db")
 	if err != nil {
-		log.Fatalf("cannot initialize database: %v", err)
+		log.Fatalf("cannot initialize databasse: %v", err)
 	}
 
 	r := gin.Default()
-	authRepository := auth.NewRepository(db)
-	authService := service.NewService(authRepository)
-	authHandler := handler.NewHandler(authService)
+	authRepository := repository.NewRepository(db)
+	authService := usecase.NewService(authRepository)
+	authHandler := delivery.NewHandler(authService)
 
-	router.RegisterRoutes(r, authHandler)
+	delivery.RegisterRoutes(r, authHandler)
 
 	log.Println("Server started at :8080")
 

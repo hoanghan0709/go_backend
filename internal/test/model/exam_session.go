@@ -1,16 +1,16 @@
-package module
+package test
 
 import (
 	"time"
 
-	"github.com/han/go-ecommerce/internal/module/auth/model"
+	auth "github.com/han/go-ecommerce/internal/auth/model"
 )
 
 type ExamSession struct {
 	ID uint `gorm:"primaryKey"`
 
 	UserID uint
-	User   model.User
+	User   auth.User
 
 	TestID uint
 	Test   Test

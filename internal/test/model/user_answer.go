@@ -1,4 +1,6 @@
-package module
+package test
+
+import "github.com/han/go-ecommerce/internal/question/model"
 
 type UserAnswer struct {
 	ID uint `gorm:"primaryKey"`
@@ -6,10 +8,10 @@ type UserAnswer struct {
 	ExamSessionID uint
 
 	QuestionID uint
-	Question   Question
+	Question   model.Question
 
 	AnswerID uint
-	Answer   Answer
+	Answer   model.Answer
 
 	IsCorrect bool
 }

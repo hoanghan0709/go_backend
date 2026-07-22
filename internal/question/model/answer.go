@@ -1,4 +1,4 @@
-package module
+package model
 
 type Answer struct {
 	ID        uint   `gorm:"primaryKey"`

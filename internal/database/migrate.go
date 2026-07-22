@@ -18,8 +18,10 @@ package database
 // )
 
 import (
-	module "github.com/han/go-ecommerce/internal/module"
-	auth "github.com/han/go-ecommerce/internal/module/auth/model"
+	user "github.com/han/go-ecommerce/internal/auth/model"
+	category "github.com/han/go-ecommerce/internal/category/model"
+	question "github.com/han/go-ecommerce/internal/question/model"
+	test "github.com/han/go-ecommerce/internal/test/model"
 	"gorm.io/gorm"
 )
 
@@ -29,12 +31,12 @@ func autoMigrate(db *gorm.DB) error {
 
 func getModels() []interface{} {
 	return []interface{}{
-		&module.Category{},
-		&module.Question{},
-		&module.Answer{},
-		&module.Test{},
-		&auth.User{},
-		&module.ExamSession{},
-		&module.UserAnswer{},
+		&category.Category{},
+		&question.Question{},
+		&question.Answer{},
+		&test.Test{},
+		&user.User{},
+		&test.ExamSession{},
+		&test.UserAnswer{},
 	}
 }

@@ -13,3 +13,4 @@ Thumbs.db
 # Thư mục IDE
 .idea/
 .vscode/
+__debug_bin*

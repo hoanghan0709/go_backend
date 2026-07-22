@@ -1,4 +1,6 @@
-package module
+package model
+
+import model "github.com/han/go-ecommerce/internal/category/model"
 
 type Question struct {
 	ID      uint   `gorm:"primaryKey"`
@@ -9,7 +11,7 @@ type Question struct {
 	IsCritical bool
 
 	CategoryID uint
-	Category   Category
+	Category   model.Category
 
 	Answers []Answer
 }
