@@ -5,18 +5,13 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	commonError "github.com/han/go-ecommerce/internal/auth/common_error"
 	"github.com/han/go-ecommerce/internal/auth/dto"
-	auth "github.com/han/go-ecommerce/internal/auth/model"
 	"github.com/han/go-ecommerce/internal/auth/usecase"
 )
 
-type AuthService interface {
-	Register(req dto.RegisterRequest) (*auth.User, error)
-	GetUser(id string) (*auth.User, error)
-}
-
 type Handler struct {
-	service AuthService
+	service usecase.AuthService
 }
 
 type response struct {
@@ -25,7 +20,7 @@ type response struct {
 	Data       interface{} `json:"data,omitempty"`
 }
 
-func NewHandler(service AuthService) *Handler {
+func New(service usecase.AuthService) *Handler {
 	return &Handler{service: service}
 }
 
@@ -40,7 +35,7 @@ func (h *Handler) Register(c *gin.Context) {
 	}
 
 	user, err := h.service.Register(req)
-	if errors.Is(err, usecase.ErrEmailAlreadyExists) {
+	if errors.Is(err, commonError.ErrEmailAlreadyExists) {
 		c.JSON(http.StatusConflict, response{
 			StatusCode: http.StatusConflict,
 			Message:    "Email already exists",
@@ -58,11 +53,7 @@ func (h *Handler) Register(c *gin.Context) {
 	c.JSON(http.StatusCreated, response{
 		StatusCode: http.StatusCreated,
 		Message:    "Register success",
-		Data: gin.H{
-			"id":    user.ID,
-			"name":  user.Name,
-			"email": user.Email,
-		},
+		Data:       dto.ToUserResponse(user),
 	})
 }
 func (h *Handler) GetUser(c *gin.Context) {

@@ -15,32 +15,27 @@ import (
 	"errors"
 	"fmt"
 
+	commonError "github.com/han/go-ecommerce/internal/auth/common_error"
 	"github.com/han/go-ecommerce/internal/auth/dto"
 	auth "github.com/han/go-ecommerce/internal/auth/model"
+	repo "github.com/han/go-ecommerce/internal/auth/repository"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
-var ErrEmailAlreadyExists = errors.New("email already exists")
-
-type UserRepository interface {
-	Create(user *auth.User) error
-	FindByEmail(email string) (*auth.User, error)
-	GetUser(id string) (*auth.User, error)
-}
-
 type Service struct {
-	repository UserRepository
+	repository repo.UserRepository
 }
 
-func NewService(repository UserRepository) *Service {
+func New(repository repo.UserRepository) *Service {
 	return &Service{repository: repository}
 }
 
-func (s *Service) Register(req dto.RegisterRequest) (*auth.User, error) {
+func (s *Service) Register(req dto.RegisterRequest) (*auth.User,
+	error) {
 	_, err := s.repository.FindByEmail(req.Email)
 	if err == nil {
-		return nil, ErrEmailAlreadyExists
+		return nil, commonError.ErrEmailAlreadyExists
 	}
 	if !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, fmt.Errorf("find user by email: %w", err)

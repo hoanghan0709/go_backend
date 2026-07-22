@@ -4,10 +4,13 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
-	"github.com/han/go-ecommerce/internal/auth/delivery"
-	"github.com/han/go-ecommerce/internal/auth/repository"
-	"github.com/han/go-ecommerce/internal/auth/usecase"
+	authDelivery "github.com/han/go-ecommerce/internal/auth/delivery"
+	authRepo "github.com/han/go-ecommerce/internal/auth/repository"
+	authSer "github.com/han/go-ecommerce/internal/auth/usecase"
 	"github.com/han/go-ecommerce/internal/database"
+	// "github.com/han/go-ecommerce/internal/question/delivery"
+	// "github.com/han/go-ecommerce/internal/question/repository"
+	// "github.com/han/go-ecommerce/internal/question/usecase"
 )
 
 func main() {
@@ -17,11 +20,15 @@ func main() {
 	}
 
 	r := gin.Default()
-	authRepository := repository.NewRepository(db)
-	authService := usecase.NewService(authRepository)
-	authHandler := delivery.NewHandler(authService)
+	authRepository := authRepo.NewRepository(db)
+	authService := authSer.New(authRepository)
+	authHandler := authDelivery.New(authService)
+	authDelivery.RegisterRoutes(r, authHandler)
 
-	delivery.RegisterRoutes(r, authHandler)
+	// questionRepository := repository.New(db)
+	// questionUsecase := usecase.New(questionRepository)
+	// questionHandler := delivery.New(questionUsecase)
+	// delivery.RegisterRoutes(r, questionHandler)
 
 	log.Println("Server started at :8080")
 
