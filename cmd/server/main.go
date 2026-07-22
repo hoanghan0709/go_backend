@@ -14,7 +14,7 @@ import (
 )
 
 func main() {
-	db, err := database.InitDB("gorm.db")
+	db, err := database.InitDB("cmd/data/gorm.db")
 	if err != nil {
 		log.Fatalf("cannot initialize databasse: %v", err)
 	}
