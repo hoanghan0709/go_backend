@@ -20,6 +20,7 @@ package database
 import (
 	user "github.com/han/go-ecommerce/internal/auth/model"
 	category "github.com/han/go-ecommerce/internal/category/model"
+	exam "github.com/han/go-ecommerce/internal/exam/model"
 	question "github.com/han/go-ecommerce/internal/question/model"
 	test "github.com/han/go-ecommerce/internal/test/model"
 	"gorm.io/gorm"
@@ -36,7 +37,7 @@ func getModels() []interface{} {
 		&question.Answer{},
 		&test.Test{},
 		&user.User{},
-		&test.ExamSession{},
-		&test.UserAnswer{},
+		&exam.ExamSession{},
+		&exam.UserAnswer{},
 	}
 }
