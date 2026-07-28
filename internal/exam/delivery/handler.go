@@ -1,7 +1,5 @@
 package delivery
 
-import "github.com/gin-gonic/gin"
-
 type Usecase interface{}
 
 type Handler struct {

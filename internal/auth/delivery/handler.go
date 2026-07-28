@@ -8,16 +8,11 @@ import (
 	commonError "github.com/han/go-ecommerce/internal/auth/common_error"
 	"github.com/han/go-ecommerce/internal/auth/dto"
 	"github.com/han/go-ecommerce/internal/auth/usecase"
+	common "github.com/han/go-ecommerce/internal/common/model"
 )
 
 type Handler struct {
 	service usecase.AuthService
-}
-
-type response struct {
-	StatusCode int         `json:"statusCode"`
-	Message    string      `json:"message"`
-	Data       interface{} `json:"data,omitempty"`
 }
 
 func New(service usecase.AuthService) *Handler {
@@ -27,7 +22,7 @@ func New(service usecase.AuthService) *Handler {
 func (h *Handler) Register(c *gin.Context) {
 	var req dto.RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, response{
+		c.JSON(http.StatusBadRequest, common.Response{
 			StatusCode: http.StatusBadRequest,
 			Message:    "Invalid request",
 		})
@@ -36,21 +31,21 @@ func (h *Handler) Register(c *gin.Context) {
 
 	user, err := h.service.Register(req)
 	if errors.Is(err, commonError.ErrEmailAlreadyExists) {
-		c.JSON(http.StatusConflict, response{
+		c.JSON(http.StatusConflict, common.Response{
 			StatusCode: http.StatusConflict,
 			Message:    "Email already exists",
 		})
 		return
 	}
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, response{
+		c.JSON(http.StatusInternalServerError, common.Response{
 			StatusCode: http.StatusInternalServerError,
 			Message:    "Cannot create user",
 		})
 		return
 	}
 
-	c.JSON(http.StatusCreated, response{
+	c.JSON(http.StatusCreated, common.Response{
 		StatusCode: http.StatusCreated,
 		Message:    "Register success",
 		Data:       dto.ToUserResponse(user),
@@ -60,7 +55,7 @@ func (h *Handler) GetUser(c *gin.Context) {
 	id := c.Param("id")
 	user, err := h.service.GetUser(id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, response{
+		c.JSON(http.StatusInternalServerError, common.Response{
 			StatusCode: http.StatusInternalServerError,
 			Message:    err.Error(),
 		})

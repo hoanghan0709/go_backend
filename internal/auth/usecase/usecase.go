@@ -23,15 +23,15 @@ import (
 	"gorm.io/gorm"
 )
 
-type Service struct {
+type UseCase struct {
 	repository repo.UserRepository
 }
 
-func New(repository repo.UserRepository) *Service {
-	return &Service{repository: repository}
+func New(repository repo.UserRepository) *UseCase {
+	return &UseCase{repository: repository}
 }
 
-func (s *Service) Register(req dto.RegisterRequest) (*auth.User,
+func (s *UseCase) Register(req dto.RegisterRequest) (*auth.User,
 	error) {
 	_, err := s.repository.FindByEmail(req.Email)
 	if err == nil {
@@ -61,7 +61,7 @@ func (s *Service) Register(req dto.RegisterRequest) (*auth.User,
 	return user, nil
 }
 
-func (s *Service) GetUser(id string) (*auth.User, error) {
+func (s *UseCase) GetUser(id string) (*auth.User, error) {
 	data, err := s.repository.GetUser(id)
 	if err != nil {
 		return nil, err

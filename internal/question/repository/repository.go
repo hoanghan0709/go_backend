@@ -30,9 +30,8 @@ func (r *Repository) FindByID(id uint) (*model.Question, error) {
 
 	return &question, nil
 }
-func (r *Repository) FindAll() ([]model.Question, error) {
+func (r *Repository) GetListQuestion() ([]model.Question, error) {
 	var questions []model.Question
-
 	err := r.db.
 		Preload("Category").
 		Preload("Answers").

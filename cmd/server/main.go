@@ -8,6 +8,9 @@ import (
 	authRepo "github.com/han/go-ecommerce/internal/auth/repository"
 	authSer "github.com/han/go-ecommerce/internal/auth/usecase"
 	"github.com/han/go-ecommerce/internal/database"
+	questionDelivery "github.com/han/go-ecommerce/internal/question/delivery"
+	questionRepo "github.com/han/go-ecommerce/internal/question/repository"
+	questionUsecase "github.com/han/go-ecommerce/internal/question/usecase"
 	// "github.com/han/go-ecommerce/internal/question/delivery"
 	// "github.com/han/go-ecommerce/internal/question/repository"
 	// "github.com/han/go-ecommerce/internal/question/usecase"
@@ -25,10 +28,10 @@ func main() {
 	authHandler := authDelivery.New(authService)
 	authDelivery.RegisterRoutes(r, authHandler)
 
-	// questionRepository := repository.New(db)
-	// questionUsecase := usecase.New(questionRepository)
-	// questionHandler := delivery.New(questionUsecase)
-	// delivery.RegisterRoutes(r, questionHandler)
+	questionRepository := questionRepo.New(db)
+	questionUsecase := questionUsecase.New(questionRepository)
+	questionHandler := questionDelivery.New(questionUsecase)
+	questionDelivery.RegisterRoutes(r, questionHandler)
 
 	log.Println("Server started at :8080")
 

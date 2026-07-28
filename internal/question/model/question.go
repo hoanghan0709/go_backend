@@ -1,7 +1,7 @@
 package model
 
 import (
-	"github.com/han/go-ecommerce/internal/category/category"
+	category "github.com/han/go-ecommerce/internal/category/model"
 	"github.com/han/go-ecommerce/internal/common/enums"
 	common "github.com/han/go-ecommerce/internal/common/model"
 )
@@ -13,10 +13,9 @@ type Question struct {
 	Image   string
 
 	IsCritical  bool
-	Order       int               `gorm:"not null"`
+	Position    int               `gorm:"not null;uniqueIndex:idx_questions_category_position"`
 	LicenseType enums.LicenseType `gorm:"type:varchar(10)"`
-	CategoryID  uint
+	CategoryID  uint              `gorm:"not null;uniqueIndex:idx_questions_category_position"`
 	Category    category.Category
-
-	Answers []Answer
+	Answers     []Answer
 }
