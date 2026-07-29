@@ -27,8 +27,8 @@ func (h *Handler) GetListQuestion(c *gin.Context) {
 		})
 		return
 	}
-	c.JSON(http.StatusOK, listQuestion)
 
+	c.JSON(http.StatusOK, dto.ToListQuestionResponse(listQuestion))
 }
 
 func (h *Handler) CreateQuestion(c *gin.Context) {
