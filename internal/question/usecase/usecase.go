@@ -1,6 +1,9 @@
 package usecase
 
 import (
+	"fmt"
+
+	"github.com/han/go-ecommerce/internal/question/dto"
 	"github.com/han/go-ecommerce/internal/question/model"
 	"github.com/han/go-ecommerce/internal/question/repository"
 )
@@ -19,4 +22,17 @@ func (s *Usecase) GetListQuestion() ([]model.Question, error) {
 		return nil, err
 	}
 	return data, nil
+}
+
+func (s *Usecase) CreateQuestion(req *dto.CreateQuestionRequest) error {
+	question := &model.Question{
+		Title:       req.Title,
+		Content:     req.Content,
+		Image:       req.Image,
+		IsCritical:  req.IsCritical,
+		LicenseType: req.LicenseType,
+		CategoryID:  req.CategoryID,
+	}
+	fmt.Print("create questions")
+	return s.repo.CreateQuestion(question)
 }

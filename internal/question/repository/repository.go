@@ -44,6 +44,23 @@ func (r *Repository) GetListQuestion() ([]model.Question, error) {
 
 	return questions, nil
 }
+func (r *Repository) CreateQuestion(question *model.Question) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		var maxPosition int
+
+		err := tx.Model(&model.Question{}).
+			Where("category_id = ?", question.CategoryID).
+			Select("COALESCE(MAX(position), 0)").
+			Scan(&maxPosition).Error
+		if err != nil {
+			return err
+		}
+
+		question.Position = maxPosition + 1
+		return tx.Create(question).Error
+	})
+}
+
 func (r *Repository) Update(question *model.Question) error {
 	return r.db.Save(question).Error
 }
