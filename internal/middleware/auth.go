@@ -17,7 +17,6 @@ func RequireAuth(tokenService *token.Service) gin.HandlerFunc {
 
 		parts := strings.Fields(authorization)
 		if len(parts) != 2 ||
-
 			!strings.EqualFold(parts[0], "Bearer") {
 			c.AbortWithStatusJSON(
 				http.StatusUnauthorized,
