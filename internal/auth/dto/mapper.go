@@ -9,3 +9,11 @@ func ToUserResponse(user *auth.User) UserResponse {
 		Email: user.Email,
 	}
 }
+func ToLoginResponse(user *auth.User, token string) LoginResponse {
+	return LoginResponse{
+		Email: user.Email,
+		ID:    user.ID,
+		Name:  user.Name,
+		Token: token,
+	}
+}

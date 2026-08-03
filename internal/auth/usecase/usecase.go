@@ -23,12 +23,19 @@ import (
 	"gorm.io/gorm"
 )
 
-type UseCase struct {
-	repository repo.UserRepository
+type TokenGenerator interface {
+	Generate(userID uint) (string, error)
 }
 
-func New(repository repo.UserRepository) *UseCase {
-	return &UseCase{repository: repository}
+type UseCase struct {
+	repository     repo.UserRepository
+	tokenGenerator TokenGenerator
+}
+
+func New(repository repo.UserRepository,
+	tokenGenerator TokenGenerator) *UseCase {
+	return &UseCase{repository: repository,
+		tokenGenerator: tokenGenerator}
 }
 
 func (s *UseCase) Register(req dto.RegisterRequest) (*auth.User,
@@ -71,4 +78,31 @@ func (s *UseCase) GetUser(id string) (*auth.User, error) {
 		Email: data.Email,
 	}
 	return user, nil
+}
+
+func (s *UseCase) Login(req dto.LoginRequest) (*LoginResult, error) {
+	user, err := s.repository.FindByEmail(req.Email)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, gorm.ErrRecordNotFound
+		}
+		return nil, fmt.Errorf("find user by email: %w", err)
+	}
+
+	if err := bcrypt.CompareHashAndPassword(
+		[]byte(user.Password),
+		[]byte(req.Password),
+	); err != nil {
+		return nil, commonError.ErrInvalidCredentials
+	}
+
+	tokenString, err := s.tokenGenerator.Generate(user.ID)
+	if err != nil {
+		return nil, fmt.Errorf("generate access token: %w", err)
+	}
+
+	return &LoginResult{
+		User:  user,
+		Token: tokenString,
+	}, nil
 }
