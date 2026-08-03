@@ -26,6 +26,7 @@ func RequireAuth(tokenService *token.Service) gin.HandlerFunc {
 					Message:    "Missing or invalid authorization header",
 				},
 			)
+
 			return
 		}
 
