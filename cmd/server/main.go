@@ -50,7 +50,7 @@ func main() {
 	questionRepository := questionRepo.New(db)
 	questionUsecase := questionUsecase.New(questionRepository)
 	questionHandler := questionDelivery.New(questionUsecase)
-	questionDelivery.RegisterRoutes(r, questionHandler)
+	questionDelivery.RegisterRoutes(r, questionHandler, middleware.RequireAuth(jwtService))
 
 	log.Println("Server started at :8080")
 
