@@ -33,7 +33,7 @@ func main() {
 	jwtSecret := os.Getenv("JWT_SECRET")
 	jwtService, err := token.New(
 		jwtSecret,
-		1*time.Minute,
+		24*time.Hour,
 	)
 	if err != nil {
 		log.Fatalf("cannot initialize JWT service: %v", err)
