@@ -1,6 +1,10 @@
 package token
 
 import (
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/base64"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"time"
@@ -31,7 +35,7 @@ func New(secret string, ttl time.Duration) (*Service, error) {
 	}, nil
 }
 
-func (s *Service) Generate(userID uint) (string, error) {
+func (s *Service) GenerateAccessToken(userID uint) (string, error) {
 	now := time.Now()
 
 	claims := Claims{
@@ -76,4 +80,20 @@ func (s *Service) Parse(tokenString string) (*Claims, error) {
 	}
 
 	return claims, nil
+}
+
+// crypto/rand tạo dữ liệu ngẫu nhiên an toàn cho token
+func (s *Service) GenerateRefreshToken() (string, error) {
+	bytes := make([]byte, 32)
+
+	if _, err := rand.Read(bytes); err != nil {
+		return "", fmt.Errorf("generate refresh token: %w", err)
+	}
+
+	return base64.RawURLEncoding.EncodeToString(bytes), nil
+}
+
+func (s *Service) HashRefreshToken(refreshToken string) string {
+	sum := sha256.Sum256([]byte(refreshToken))
+	return hex.EncodeToString(sum[:])
 }

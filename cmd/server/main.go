@@ -33,7 +33,7 @@ func main() {
 	jwtSecret := os.Getenv("JWT_SECRET")
 	jwtService, err := token.New(
 		jwtSecret,
-		24*time.Hour,
+		12*time.Hour,
 	)
 	if err != nil {
 		log.Fatalf("cannot initialize JWT service: %v", err)
@@ -41,7 +41,16 @@ func main() {
 
 	r := gin.Default()
 	authRepository := authRepo.NewRepository(db)
-	authService := authSer.New(authRepository, jwtService)
+
+	refreshTokenRepository :=
+		authRepo.NewRefreshTokenRepository(db)
+
+	authService := authSer.New(
+		authRepository,
+		refreshTokenRepository,
+		jwtService,
+		7*24*time.Hour)
+
 	authHandler := authDelivery.New(authService)
 	authDelivery.RegisterRoutes(r,
 		authHandler,

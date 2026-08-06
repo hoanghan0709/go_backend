@@ -5,9 +5,10 @@ import "gorm.io/gorm"
 type User struct {
 	gorm.Model
 	// ID       uint `gorm:"primaryKey"`
-	Name     string
-	Email    string
-	Password string
+	Name          string
+	Email         string
+	Password      string
+	RefreshTokens []RefreshToken `gorm:"foreignKey:UserID"`
 }
 
 // //User là database.//DTO là API

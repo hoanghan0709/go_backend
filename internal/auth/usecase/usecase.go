@@ -14,6 +14,7 @@ package usecase
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	commonError "github.com/han/go-ecommerce/internal/auth/common_error"
 	"github.com/han/go-ecommerce/internal/auth/dto"
@@ -23,19 +24,31 @@ import (
 	"gorm.io/gorm"
 )
 
-type TokenGenerator interface {
-	Generate(userID uint) (string, error)
-}
+var (
+	ErrInvalidRefreshToken = errors.New("invalid refresh token")
+
+	ErrExpiredRefreshToken = errors.New("refresh token expired")
+)
 
 type UseCase struct {
-	repository     repo.UserRepository
-	tokenGenerator TokenGenerator
+	repository             repo.UserRepository
+	refreshTokenRepository repo.RefreshTokenRepository
+	tokenService           TokenService
+	refreshTokenTTL        time.Duration
 }
 
-func New(repository repo.UserRepository,
-	tokenGenerator TokenGenerator) *UseCase {
-	return &UseCase{repository: repository,
-		tokenGenerator: tokenGenerator}
+func New(
+	userRepository repo.UserRepository,
+	refreshTokenRepository repo.RefreshTokenRepository,
+	tokenService TokenService,
+	refreshTokenTTL time.Duration,
+) *UseCase {
+	return &UseCase{
+		repository:             userRepository,
+		refreshTokenRepository: refreshTokenRepository,
+		tokenService:           tokenService,
+		refreshTokenTTL:        refreshTokenTTL,
+	}
 }
 
 func (s *UseCase) Register(req dto.RegisterRequest) (*auth.User,
@@ -84,7 +97,7 @@ func (s *UseCase) Login(req dto.LoginRequest) (*LoginResult, error) {
 	user, err := s.repository.FindByEmail(req.Email)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, gorm.ErrRecordNotFound
+			return nil, commonError.ErrInvalidCredentials
 		}
 		return nil, fmt.Errorf("find user by email: %w", err)
 	}
@@ -96,13 +109,124 @@ func (s *UseCase) Login(req dto.LoginRequest) (*LoginResult, error) {
 		return nil, commonError.ErrInvalidCredentials
 	}
 
-	tokenString, err := s.tokenGenerator.Generate(user.ID)
+	// tokenString, err := s.tokenService.GenerateAccessToken(user.ID)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("generate access token: %w", err)
+	// }
+
+	// return &LoginResult{
+	// 	User: user, TokenPair: TokenPair(),
+	// }, nil
+	accessToken, err :=
+		s.tokenService.GenerateAccessToken(user.ID)
 	if err != nil {
 		return nil, fmt.Errorf("generate access token: %w", err)
 	}
+	refreshToken, err :=
+		s.tokenService.GenerateRefreshToken()
+	if err != nil {
+		return nil, fmt.Errorf("generate refresh token: %w", err)
+	}
 
+	refreshTokenHash :=
+		s.tokenService.HashRefreshToken(refreshToken)
+	record := &auth.RefreshToken{
+		UserID:    user.ID,
+		TokenHash: refreshTokenHash,
+		ExpiresAt: time.Now().Add(s.refreshTokenTTL),
+	}
+
+	if err := s.refreshTokenRepository.Create(record); err != nil {
+		return nil, fmt.Errorf("save refresh token: %w", err)
+	}
 	return &LoginResult{
-		User:  user,
-		Token: tokenString,
+		User: user,
+		TokenPair: TokenPair{
+			AccessToken:  accessToken,
+			RefreshToken: refreshToken,
+		},
+	}, nil
+
+}
+
+func (s *UseCase) Refresh(
+	refreshToken string,
+) (*TokenPair, error) {
+
+	oldHash :=
+		s.tokenService.HashRefreshToken(refreshToken)
+
+	storedToken, err :=
+		s.refreshTokenRepository.FindByHash(oldHash)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrInvalidRefreshToken
+		}
+
+		return nil, fmt.Errorf(
+			"find refresh token: %w",
+			err,
+		)
+	}
+
+	if storedToken.RevokedAt != nil {
+		return nil, ErrInvalidRefreshToken
+	}
+
+	if time.Now().After(storedToken.ExpiresAt) {
+		return nil, ErrExpiredRefreshToken
+	}
+
+	newAccessToken, err :=
+		s.tokenService.GenerateAccessToken(
+			storedToken.UserID,
+		)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"generate access token: %w",
+			err,
+		)
+	}
+
+	newRefreshToken, err :=
+		s.tokenService.GenerateRefreshToken()
+	if err != nil {
+		return nil, fmt.Errorf(
+			"generate refresh token: %w",
+			err,
+		)
+	}
+
+	newHash :=
+		s.tokenService.HashRefreshToken(
+			newRefreshToken,
+		)
+
+	// if err := s.refreshTokenRepository.Revoke(oldHash); err != nil {
+	// 	return nil, fmt.Errorf(
+	// 		"revoke old refresh token: %w",
+	// 		err,
+	// 	)
+	// }
+
+	newRecord := &auth.RefreshToken{
+		UserID:    storedToken.UserID,
+		TokenHash: newHash,
+		ExpiresAt: time.Now().Add(s.refreshTokenTTL),
+	}
+
+	if err := s.refreshTokenRepository.Rotate(
+		oldHash,
+		newRecord,
+	); err != nil {
+		return nil, fmt.Errorf(
+			"rotate refresh token: %w",
+			err,
+		)
+	}
+
+	return &TokenPair{
+		AccessToken:  newAccessToken,
+		RefreshToken: newRefreshToken,
 	}, nil
 }

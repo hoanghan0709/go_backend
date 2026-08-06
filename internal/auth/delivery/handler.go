@@ -99,7 +99,7 @@ func (h *Handler) Login(c *gin.Context) {
 		return
 	}
 	result, errLogin := h.service.Login(request)
-	if errors.Is(err, commonError.ErrInvalidCredentials) {
+	if errors.Is(errLogin, commonError.ErrInvalidCredentials) {
 		c.JSON(http.StatusUnauthorized, common.Response{
 			StatusCode: http.StatusUnauthorized,
 			Message:    "Invalid email or password",
@@ -118,7 +118,52 @@ func (h *Handler) Login(c *gin.Context) {
 		Message:    "Login success",
 		Data: dto.ToLoginResponse(
 			result.User,
-			result.Token,
+			result.AccessToken,
+			result.RefreshToken,
 		),
+	})
+}
+func (h *Handler) Refresh(c *gin.Context) {
+	var request dto.RefreshTokenRequest
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, common.Response{
+			StatusCode: http.StatusBadRequest,
+			Message:    "Invalid refresh request",
+		})
+		return
+	}
+
+	result, err :=
+		h.service.Refresh(request.RefreshToken)
+
+	if errors.Is(err, usecase.ErrInvalidRefreshToken) ||
+		errors.Is(err, usecase.ErrExpiredRefreshToken) {
+		c.JSON(http.StatusUnauthorized, common.Response{
+			StatusCode: http.StatusUnauthorized,
+			Message:    "Invalid or expired refresh token",
+		})
+		return
+	}
+
+	if err != nil {
+		c.JSON(
+			http.StatusInternalServerError,
+			common.Response{
+				StatusCode: http.StatusInternalServerError,
+				Message:    err.Error(),
+			},
+		)
+		return
+	}
+
+	c.JSON(http.StatusOK, common.Response{
+		StatusCode: http.StatusOK,
+		Message:    "Refresh token success",
+		Data: dto.TokenResponse{
+			AccessToken:  result.AccessToken,
+			RefreshToken: result.RefreshToken,
+			ExpiresIn:    12 * 60 * 60,
+		},
 	})
 }

@@ -12,20 +12,14 @@ func RegisterRoutes(
 
 	auth := r.Group("/auth")
 	{
-		auth.POST(
-			"/register",
-			handler.Register,
-		)
-		auth.POST(
-			"/login",
-			handler.Login,
-		)
+		auth.POST("/register", handler.Register)
+		auth.POST("/login", handler.Login)
+		auth.POST("/refresh", handler.Refresh)
 	}
 
 	protected := auth.Group("")
 	protected.Use(authMiddleware)
 	{
-		protected.GET("/getProfile", ///:id
-			handler.GetUser)
+		protected.GET("/getProfile", handler.GetUser) //:id
 	}
 }

@@ -9,8 +9,10 @@ type UserResponse struct {
 }
 
 type LoginResponse struct {
-	ID    uint   `json:"id"`
-	Name  string `json:"name"`
-	Email string `json:"email"`
-	Token string `json:"token,omitempty"`
+	ID           uint   `json:"id"`
+	Name         string `json:"name"`
+	Email        string `json:"email"`
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	ExpiresIn    int64  `json:"expires_in"`
 }

@@ -9,11 +9,15 @@ func ToUserResponse(user *auth.User) UserResponse {
 		Email: user.Email,
 	}
 }
-func ToLoginResponse(user *auth.User, token string) LoginResponse {
+func ToLoginResponse(user *auth.User,
+	accessToken string,
+	refreshToken string) LoginResponse {
 	return LoginResponse{
-		Email: user.Email,
-		ID:    user.ID,
-		Name:  user.Name,
-		Token: token,
+		Email:        user.Email,
+		ID:           user.ID,
+		Name:         user.Name,
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+		ExpiresIn:    12 * 60 * 60,
 	}
 }
