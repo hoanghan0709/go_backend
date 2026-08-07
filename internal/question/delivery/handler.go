@@ -1,12 +1,14 @@
 package delivery
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	common "github.com/han/go-ecommerce/internal/common/model"
 	commonValidator "github.com/han/go-ecommerce/internal/common/validator"
 	"github.com/han/go-ecommerce/internal/question/dto"
+	questionErrors "github.com/han/go-ecommerce/internal/question/errors"
 	"github.com/han/go-ecommerce/internal/question/usecase"
 )
 
@@ -52,6 +54,17 @@ func (h *Handler) CreateQuestion(c *gin.Context) {
 	}
 
 	if err := h.usecase.CreateQuestion(&req); err != nil {
+		if errors.Is(err, questionErrors.ErrInvalidAnswers) ||
+			errors.Is(err, questionErrors.ErrDuplicateAnswerLabel) ||
+			errors.Is(err, questionErrors.ErrDuplicateAnswerOrder) ||
+			errors.Is(err, questionErrors.ErrInvalidCorrectAnswer) {
+			c.JSON(http.StatusBadRequest, common.Response{
+				StatusCode: http.StatusBadRequest,
+				Message:    err.Error(),
+			})
+			return
+		}
+
 		c.JSON(http.StatusInternalServerError, common.Response{
 			StatusCode: http.StatusInternalServerError,
 			Message:    err.Error(),

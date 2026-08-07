@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/han/go-ecommerce/internal/answer/model"
 	category "github.com/han/go-ecommerce/internal/category/model"
 	"github.com/han/go-ecommerce/internal/common/enums"
 	common "github.com/han/go-ecommerce/internal/common/model"
@@ -17,5 +18,5 @@ type Question struct {
 	LicenseType enums.LicenseType `gorm:"type:varchar(10)"`
 	CategoryID  uint              `gorm:"not null;uniqueIndex:idx_questions_category_position"`
 	Category    category.Category
-	Answers     []Answer
+	Answers     []model.Answer
 }

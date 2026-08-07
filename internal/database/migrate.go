@@ -18,6 +18,7 @@ package database
 // )
 
 import (
+	"github.com/han/go-ecommerce/internal/answer/model"
 	auth "github.com/han/go-ecommerce/internal/auth/model"
 	category "github.com/han/go-ecommerce/internal/category/model"
 	exam "github.com/han/go-ecommerce/internal/exam/model"
@@ -34,7 +35,7 @@ func getModels() []interface{} {
 	return []interface{}{
 		&category.Category{},
 		&question.Question{},
-		&question.Answer{},
+		&model.Answer{},
 		&test.Test{},
 		&exam.ExamSession{},
 		&exam.UserAnswer{},

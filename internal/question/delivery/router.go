@@ -13,7 +13,7 @@ func RegisterRoutes(r *gin.Engine, h *Handler,
 	protected.Use(authMiddleware)
 	{
 		//get List
-		protected.GET("/getListQuestion",
+		protected.GET("/getList",
 			h.GetListQuestion)
 		//create new Question
 		protected.POST("/create",

@@ -1,9 +1,9 @@
 package dto
 
 import (
+	"github.com/han/go-ecommerce/internal/answer/model"
 	category "github.com/han/go-ecommerce/internal/category/model"
 	"github.com/han/go-ecommerce/internal/common/enums"
-	"github.com/han/go-ecommerce/internal/question/model"
 )
 
 type ListQuestionResponse struct {
