@@ -5,6 +5,6 @@ import (
 )
 
 type RepositoryI interface {
-	GetList() ([]model.Answer, error)
+	GetListByQuestionID(questionID uint) ([]model.Answer, error)
 	Create(req *model.Answer) error
 }

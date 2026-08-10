@@ -6,6 +6,6 @@ import (
 )
 
 type AnswerI interface {
-	GetList() ([]model.Answer, error)
-	Create(req *dto.AnswerRequest) error
+	GetListByQuestionID(questionID uint) ([]model.Answer, error)
+	Create(questionID uint, req *dto.AnswerRequest) error
 }

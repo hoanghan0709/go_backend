@@ -13,13 +13,19 @@ func New(db *gorm.DB) *Repository {
 	return &Repository{db: db}
 }
 
-func (r *Repository) GetList() ([]model.Answer, error) {
-	var answer []model.Answer
-	err := r.db.Find(&answer).Error
+func (r *Repository) GetListByQuestionID(questionID uint) ([]model.Answer, error) {
+	var answers []model.Answer
+	// err := r.db.Find(&answer).Error
+	err := r.db.
+		Where("question_id = ?", questionID).
+		Order("\"order\" ASC").
+		Find(&answers).
+		Error
+
 	if err != nil {
 		return nil, err
 	}
-	return answer, nil
+	return answers, nil
 
 }
 func (r *Repository) Create(model *model.Answer) error {

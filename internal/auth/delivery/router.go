@@ -22,4 +22,5 @@ func RegisterRoutes(
 	{
 		protected.GET("/getProfile", handler.GetUser) //:id
 	}
+
 }

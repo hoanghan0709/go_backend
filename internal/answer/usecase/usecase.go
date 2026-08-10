@@ -11,24 +11,23 @@ type Usecase struct {
 }
 
 // Create implements [AnswerI].
-func (u *Usecase) Create(req *dto.AnswerRequest) error {
+func (u *Usecase) Create(questionID uint, req *dto.AnswerRequest) error {
 	answer := &model.Answer{
 		Content:    req.Content,
 		Label:      req.Label,
 		Order:      req.Order,
 		IsCorrect:  req.IsCorrect,
-		QuestionID: req.QuestionID,
+		QuestionID: questionID,
 	}
-	err := u.repo.Create(answer)
-	return err
+	return u.repo.Create(answer)
 }
 
 func New(repo answerRepository.RepositoryI) *Usecase {
 	return &Usecase{repo: repo}
 }
 
-func (u *Usecase) GetList() ([]model.Answer, error) {
-	data, err := u.repo.GetList()
+func (u *Usecase) GetListByQuestionID(questionID uint) ([]model.Answer, error) {
+	data, err := u.repo.GetListByQuestionID(questionID)
 	if err != nil {
 		return nil, err
 	}

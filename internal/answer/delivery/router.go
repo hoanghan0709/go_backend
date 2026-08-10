@@ -2,19 +2,33 @@ package delivery
 
 import "github.com/gin-gonic/gin"
 
-func RegisterRoutes(r *gin.Engine, handler *Handler, authMiddleware gin.HandlerFunc) {
+func RegisterRoutes(
+	r *gin.Engine,
+	handler *Handler,
+	authMiddleware gin.HandlerFunc,
+) {
+	questions := r.Group("/questions")
+	questions.Use(authMiddleware)
 
-	answer := r.Group("/answer")
-
-	protected := answer.Group("")
-	protected.Use(authMiddleware)
 	{
-		protected.GET("/getList", handler.GetList)
-		protected.POST("/create", handler.Create)
-		// protected.DELETE("/delete", handler.Delete)
+		questions.POST(
+			"/:question_id/answers",
+			handler.Create,
+		)
+
+		questions.GET(
+			"/:question_id/answers",
+			handler.GetListByQuestionID,
+		)
+
+		// questions.PUT(
+		//     "/:question_id/answers/:answer_id",
+		//     handler.Update,
+		// )
+
+		// questions.DELETE(
+		//     "/:question_id/answers/:answer_id",
+		//     handler.Delete,
+		// )
 	}
 }
-
-//POST /questions/:question_id/answers
-// PUT  /questions/:question_id/answers/:answer_id
-// DELETE /questions/:question_id/answers/:answer_id
