@@ -21,10 +21,10 @@ func RegisterRoutes(
 			handler.GetListByQuestionID,
 		)
 
-		// questions.PUT(
-		//     "/:question_id/answers/:answer_id",
-		//     handler.Update,
-		// )
+		questions.PUT(
+			"/:question_id/answers/:answer_id",
+			handler.Update,
+		)
 
 		// questions.DELETE(
 		//     "/:question_id/answers/:answer_id",

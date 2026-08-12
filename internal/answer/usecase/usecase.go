@@ -33,3 +33,15 @@ func (u *Usecase) GetListByQuestionID(questionID uint) ([]model.Answer, error) {
 	}
 	return data, nil
 }
+func (u *Usecase) Update(questionID uint, answerID uint, req *dto.AnswerRequest) error {
+
+	answer := &model.Answer{
+		Content:    req.Content,
+		Label:      req.Label,
+		Order:      req.Order,
+		IsCorrect:  req.IsCorrect,
+		QuestionID: questionID,
+	}
+	answer.ID = answerID
+	return u.repo.Update(answer)
+}

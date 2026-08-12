@@ -1,11 +1,13 @@
 package delivery
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/han/go-ecommerce/internal/answer/dto"
+	answerErrors "github.com/han/go-ecommerce/internal/answer/errors"
 	usecaseAnswer "github.com/han/go-ecommerce/internal/answer/usecase"
 	common "github.com/han/go-ecommerce/internal/common/model"
 )
@@ -131,5 +133,62 @@ func (h *Handler) GetListByQuestionID(ctx *gin.Context) {
 		StatusCode: http.StatusOK,
 		Message:    "Success",
 		Data:       answers,
+	})
+}
+func (h *Handler) Update(ctx *gin.Context) {
+	questionID, err := parseUintParam(ctx, "question_id")
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, common.Response{
+			StatusCode: http.StatusBadRequest,
+			Message:    "Invalid question ID",
+		})
+		return
+	}
+
+	answerID, err := parseUintParam(ctx, "answer_id")
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, common.Response{
+			StatusCode: http.StatusBadRequest,
+			Message:    "Invalid answer ID",
+		})
+		return
+	}
+
+	var req dto.AnswerRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, common.Response{
+			StatusCode: http.StatusBadRequest,
+			Message:    "Invalid JSON request",
+		})
+		return
+	}
+
+	if err := h.usecase.Update(questionID, answerID, &req); err != nil {
+		if errors.Is(err, answerErrors.ErrNotFound) {
+			ctx.JSON(http.StatusNotFound, common.Response{
+				StatusCode: http.StatusNotFound,
+				Message:    "Answer not found",
+			})
+			return
+		}
+		if errors.Is(err, answerErrors.ErrDuplicateLabel) ||
+			errors.Is(err, answerErrors.ErrDuplicateOrder) {
+			ctx.JSON(http.StatusConflict, common.Response{
+				StatusCode: http.StatusConflict,
+				Message:    err.Error(),
+			})
+			return
+		}
+
+		ctx.JSON(http.StatusInternalServerError, common.Response{
+			StatusCode: http.StatusInternalServerError,
+			Message:    err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, common.Response{
+		StatusCode: http.StatusOK,
+		Message:    "Update answer success",
 	})
 }

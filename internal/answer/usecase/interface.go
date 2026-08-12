@@ -8,4 +8,5 @@ import (
 type AnswerI interface {
 	GetListByQuestionID(questionID uint) ([]model.Answer, error)
 	Create(questionID uint, req *dto.AnswerRequest) error
+	Update(questionID uint, answerID uint, req *dto.AnswerRequest) error
 }
