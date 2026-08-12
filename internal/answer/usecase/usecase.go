@@ -45,3 +45,7 @@ func (u *Usecase) Update(questionID uint, answerID uint, req *dto.AnswerRequest)
 	answer.ID = answerID
 	return u.repo.Update(answer)
 }
+
+func (u *Usecase) Delete(questionID uint, answerID uint) error {
+	return u.repo.Delete(questionID, answerID)
+}

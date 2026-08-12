@@ -35,6 +35,21 @@ func (r *Repository) Create(model *model.Answer) error {
 	return r.db.Create(model).Error
 }
 
+func (r *Repository) Delete(questionID uint, answerID uint) error {
+	result := r.db.
+		Where("id = ? AND question_id = ?", answerID, questionID).
+		Delete(&model.Answer{})
+
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return answerErrors.ErrNotFound
+	}
+
+	return nil
+}
+
 func (r *Repository) Update(answer *model.Answer) error {
 	var existing model.Answer
 	if err := r.db.

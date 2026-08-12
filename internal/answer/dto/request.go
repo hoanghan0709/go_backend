@@ -7,3 +7,7 @@ type AnswerRequest struct {
 	IsCorrect bool   `json:"is_correct"`
 	// QuestionID uint   `json:"question_id" binding:"required"`
 }
+type DeleteAnswerRequest struct {
+	questionID string `json:"question_id" binding:"required"`
+	answerID   string `json:"answer_id" binding:"required"`
+}

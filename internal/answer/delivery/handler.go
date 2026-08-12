@@ -192,3 +192,44 @@ func (h *Handler) Update(ctx *gin.Context) {
 		Message:    "Update answer success",
 	})
 }
+func (h *Handler) Delete(ctx *gin.Context) {
+
+	questionID, err := parseUintParam(ctx, "question_id")
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, common.Response{
+			StatusCode: http.StatusBadRequest,
+			Message:    "Invalid question ID",
+		})
+		return
+	}
+
+	answerID, err := parseUintParam(ctx, "answer_id")
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, common.Response{
+			StatusCode: http.StatusBadRequest,
+			Message:    "Invalid answer ID",
+		})
+		return
+	}
+
+	var req dto.DeleteAnswerRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, common.Response{
+			StatusCode: http.StatusBadRequest,
+			Message:    "Invalid JSON request",
+		})
+		return
+	}
+	if err := h.usecase.Delete(questionID, answerID); err != nil {
+		ctx.JSON(http.StatusInternalServerError, common.Response{
+			StatusCode: http.StatusInternalServerError,
+			Message:    err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, common.Response{
+		StatusCode: http.StatusOK,
+		Message:    "Delete answer success",
+	})
+}
