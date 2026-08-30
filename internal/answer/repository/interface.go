@@ -9,4 +9,5 @@ type RepositoryI interface {
 	Create(req *model.Answer) error
 	Update(req *model.Answer) error
 	Delete(questionID uint, answerID uint) error
+	GetListAnswer() ([]model.Answer, error)
 }

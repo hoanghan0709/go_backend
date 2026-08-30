@@ -34,6 +34,15 @@ func (r *Repository) GetListByQuestionID(questionID uint) ([]model.Answer, error
 func (r *Repository) Create(model *model.Answer) error {
 	return r.db.Create(model).Error
 }
+func (r *Repository) GetListAnswer() ([]model.Answer, error) {
+	var response []model.Answer
+	err := r.db.Find(&response).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return response, nil
+}
 
 func (r *Repository) Delete(questionID uint, answerID uint) error {
 	result := r.db.

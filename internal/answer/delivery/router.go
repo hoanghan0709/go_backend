@@ -8,7 +8,10 @@ func RegisterRoutes(
 	authMiddleware gin.HandlerFunc,
 ) {
 	questions := r.Group("/questions")
+	answer := r.Group("/answer")
+
 	questions.Use(authMiddleware)
+	answer.Use(authMiddleware)
 
 	{
 		//CREATE answer by question
@@ -31,6 +34,12 @@ func RegisterRoutes(
 		questions.DELETE(
 			"/:question_id/answers/:answer_id",
 			handler.Delete,
+		)
+	}
+	//get all answer
+	{
+		answer.GET("/list_answer",
+			handler.GetListAnswer,
 		)
 	}
 }

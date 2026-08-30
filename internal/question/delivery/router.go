@@ -18,6 +18,7 @@ func RegisterRoutes(r *gin.Engine, h *Handler,
 		//create new Question
 		protected.POST("/create",
 			h.CreateQuestion)
+		//update question
 
 	}
 }

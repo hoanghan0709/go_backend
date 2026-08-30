@@ -25,7 +25,6 @@ func (u *Usecase) Create(questionID uint, req *dto.AnswerRequest) error {
 func New(repo answerRepository.RepositoryI) *Usecase {
 	return &Usecase{repo: repo}
 }
-
 func (u *Usecase) GetListByQuestionID(questionID uint) ([]model.Answer, error) {
 	data, err := u.repo.GetListByQuestionID(questionID)
 	if err != nil {
@@ -48,4 +47,12 @@ func (u *Usecase) Update(questionID uint, answerID uint, req *dto.AnswerRequest)
 
 func (u *Usecase) Delete(questionID uint, answerID uint) error {
 	return u.repo.Delete(questionID, answerID)
+}
+
+func (u *Usecase) GetListAnswer() ([]model.Answer, error) {
+	data, err := u.repo.GetListAnswer()
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
 }

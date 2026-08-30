@@ -233,3 +233,20 @@ func (h *Handler) Delete(ctx *gin.Context) {
 		Message:    "Delete answer success",
 	})
 }
+
+func (h *Handler) GetListAnswer(ctx *gin.Context) {
+	answers, err := h.usecase.GetListAnswer()
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, common.Response{
+			StatusCode: http.StatusInternalServerError,
+			Message:    err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, common.Response{
+		StatusCode: http.StatusOK,
+		Message:    "Success",
+		Data:       answers,
+	})
+}

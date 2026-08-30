@@ -14,7 +14,7 @@ type BaseModel struct {
 	DeletedAt gorm.DeletedAt `gorm:"index"`
 }
 type Response struct {
-	StatusCode int         `json:"statusCode"`
+	StatusCode int         `json:"status_code"`
 	Message    string      `json:"message"`
 	Data       interface{} `json:"data,omitempty"`
 }
