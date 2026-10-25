@@ -1,0 +1,95 @@
+# Thay token và ID bằng giá trị thực từ response. Dữ liệu này chỉ để minh họa.
+@base = http://localhost:8080
+@admin_token = replace-admin-access-token
+@learner_token = replace-learner-access-token
+@category_id = 1
+@question_id = 1
+@answer_id = 1
+@test_id = 1
+@exam_id = 1
+
+### Đăng ký (sau đó dùng cmd/admin để cấp quyền tài khoản quản trị)
+POST {{base}}/auth/register
+Content-Type: application/json
+
+{"name":"Người học mẫu","email":"learner@example.com","password":"change-this-example-password"}
+
+### Đăng nhập
+POST {{base}}/auth/login
+Content-Type: application/json
+
+{"email":"learner@example.com","password":"change-this-example-password"}
+
+### Tạo chủ đề
+POST {{base}}/api/v1/admin/categories
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+{"name":"Chủ đề minh họa","description":"Dữ liệu thử nghiệm"}
+
+### Tạo câu hỏi
+POST {{base}}/api/v1/admin/questions
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+{
+ "title":"Câu hỏi minh họa",
+ "content":"Chọn đáp án đúng trong dữ liệu ví dụ?",
+ "explanation":"A là đáp án đúng trong ví dụ này.",
+ "license_type":"A1",
+ "category_id":{{category_id}},
+ "is_critical":true,
+ "published":true,
+ "answers":[
+  {"content":"Phương án A","label":"A","order":1,"is_correct":true},
+  {"content":"Phương án B","label":"B","order":2,"is_correct":false}
+ ]
+}
+
+### Tạo đề một câu để thử luồng; không phải cấu hình đề chính thức
+POST {{base}}/api/v1/admin/tests
+Authorization: Bearer {{admin_token}}
+Content-Type: application/json
+
+{"name":"Đề demo","license_type":"A1","version":"demo-v1","duration_minutes":10,"passing_score":1,"critical_fail":true,"published":true,"question_ids":[{{question_id}}]}
+
+### Danh sách đề
+GET {{base}}/api/v1/tests?license_type=A1
+Authorization: Bearer {{learner_token}}
+
+### Bắt đầu phiên
+POST {{base}}/api/v1/exams
+Authorization: Bearer {{learner_token}}
+Content-Type: application/json
+
+{"test_id":{{test_id}}}
+
+### Lưu lựa chọn; answer_id phải lấy từ snapshot trong response phiên thi
+PUT {{base}}/api/v1/exams/{{exam_id}}/answers/{{question_id}}
+Authorization: Bearer {{learner_token}}
+Content-Type: application/json
+
+{"answer_id":{{answer_id}}}
+
+### Nộp bài
+POST {{base}}/api/v1/exams/{{exam_id}}/submit
+Authorization: Bearer {{learner_token}}
+
+### Xem lại
+GET {{base}}/api/v1/exams/{{exam_id}}
+Authorization: Bearer {{learner_token}}
+
+### Ôn câu sai
+GET {{base}}/api/v1/practice/wrong-questions?license_type=A1
+Authorization: Bearer {{learner_token}}
+
+### Trả lời luyện tập; answer_id lấy từ response danh sách luyện tập hiện tại
+POST {{base}}/api/v1/practice/questions/{{question_id}}/answer
+Authorization: Bearer {{learner_token}}
+Content-Type: application/json
+
+{"answer_id":{{answer_id}}}
+
+### Tiến bộ
+GET {{base}}/api/v1/progress?license_type=A1
+Authorization: Bearer {{learner_token}}

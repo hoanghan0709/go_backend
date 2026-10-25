@@ -12,6 +12,7 @@ func ToListAnswer(answer []model.Answer) []AnswerResponse {
 
 func toAnswerResponse(t *model.Answer) AnswerResponse {
 	return AnswerResponse{
+		ID:         t.ID,
 		Content:    t.Content,
 		Label:      t.Label,
 		Order:      t.Order,

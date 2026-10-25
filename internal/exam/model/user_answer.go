@@ -9,9 +9,9 @@ import (
 type UserAnswer struct {
 	common.BaseModel
 
-	ExamSessionID uint
+	ExamSessionID uint `gorm:"uniqueIndex:idx_session_question"`
 
-	QuestionID uint
+	QuestionID uint `gorm:"uniqueIndex:idx_session_question"`
 	Question   modelQuestion.Question
 
 	AnswerID uint

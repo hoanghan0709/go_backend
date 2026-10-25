@@ -7,6 +7,9 @@ import (
 )
 
 type ListQuestionResponse struct {
+	ID          uint              `json:"id"`
+	Explanation string            `json:"explanation"`
+	Published   bool              `json:"published"`
 	Title       string            `json:"title"`
 	Content     string            `json:"content"`
 	Image       string            `json:"image"`

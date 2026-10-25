@@ -7,7 +7,8 @@ type User struct {
 	// ID       uint `gorm:"primaryKey"`
 	Name          string
 	Email         string
-	Password      string
+	Password      string         `json:"-"`
+	Role          string         `gorm:"not null;default:learner" json:"role"`
 	RefreshTokens []RefreshToken `gorm:"foreignKey:UserID"`
 }
 

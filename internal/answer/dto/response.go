@@ -1,6 +1,7 @@
 package dto
 
 type AnswerResponse struct {
+	ID      uint   `json:"id"`
 	Content string `gorm:"type:text;not null" json:"content"`
 
 	Label string `gorm:"size:2;not null;uniqueIndex:idx_answers_question_label" json:"label"`

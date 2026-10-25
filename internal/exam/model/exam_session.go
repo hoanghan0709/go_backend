@@ -12,12 +12,17 @@ import (
 type ExamSession struct {
 	common.BaseModel
 	// Người làm bài
-	UserID uint
+	UserID uint `gorm:"index:idx_exam_user_status_expiry"`
 	User   auth.User
 	// Đề thi
 	TestID uint
 	Test   test.Test
 	// Số câu đúng
+	Snapshot      string    `gorm:"type:text" json:"-"`
+	ExpiresAt     time.Time `gorm:"index:idx_exam_user_status_expiry"`
+	PassingScore  int
+	CriticalFail  bool
+	FailureReason string
 	CorrectAnswer int
 	Score         int
 	IsPassed      bool
@@ -26,7 +31,7 @@ type ExamSession struct {
 	FinishedAt *time.Time
 
 	// Trạng thái
-	Status enums.ExamStatus `gorm:"type:varchar(20);default:'DOING'"`
+	Status enums.ExamStatus `gorm:"type:varchar(20);default:'DOING';index:idx_exam_user_status_expiry"`
 
 	// Thời gian làm bài (giây)
 	Duration    int

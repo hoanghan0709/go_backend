@@ -6,12 +6,13 @@ func RegisterRoutes(
 	r *gin.Engine,
 	handler *Handler,
 	authMiddleware gin.HandlerFunc,
+	adminMiddleware gin.HandlerFunc,
 ) {
 	questions := r.Group("/questions")
 	answer := r.Group("/answer")
 
-	questions.Use(authMiddleware)
-	answer.Use(authMiddleware)
+	questions.Use(authMiddleware, adminMiddleware)
+	answer.Use(authMiddleware, adminMiddleware)
 
 	{
 		//CREATE answer by question

@@ -12,6 +12,7 @@ func ToListQuestionResponse(questions []model.Question) []ListQuestionResponse {
 
 func toQuestionResponse(t *model.Question) ListQuestionResponse {
 	return ListQuestionResponse{
+		ID: t.ID, Explanation: t.Explanation, Published: t.Published,
 		Title:       t.Title,
 		Content:     t.Content,
 		Image:       t.Image,

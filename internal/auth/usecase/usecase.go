@@ -86,11 +86,7 @@ func (s *UseCase) GetUser(id string) (*auth.User, error) {
 	if err != nil {
 		return nil, err
 	}
-	user := &auth.User{
-		Name:  data.Name,
-		Email: data.Email,
-	}
-	return user, nil
+	return data, nil
 }
 
 func (s *UseCase) Login(req dto.LoginRequest) (*LoginResult, error) {

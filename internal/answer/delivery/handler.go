@@ -2,6 +2,8 @@ package delivery
 
 import (
 	"errors"
+	"github.com/han/go-ecommerce/internal/common/httpapi"
+	"github.com/han/go-ecommerce/internal/learning"
 	"net/http"
 	"strconv"
 
@@ -97,10 +99,7 @@ func (h *Handler) Create(ctx *gin.Context) {
 	}
 
 	if err := h.usecase.Create(questionID, &req); err != nil {
-		ctx.JSON(http.StatusInternalServerError, common.Response{
-			StatusCode: http.StatusInternalServerError,
-			Message:    err.Error(),
-		})
+		httpapi.Error(ctx, err)
 		return
 	}
 
@@ -164,6 +163,10 @@ func (h *Handler) Update(ctx *gin.Context) {
 	}
 
 	if err := h.usecase.Update(questionID, answerID, &req); err != nil {
+		if errors.Is(err, learning.ErrInvalid) {
+			httpapi.Error(ctx, err)
+			return
+		}
 		if errors.Is(err, answerErrors.ErrNotFound) {
 			ctx.JSON(http.StatusNotFound, common.Response{
 				StatusCode: http.StatusNotFound,
@@ -212,15 +215,15 @@ func (h *Handler) Delete(ctx *gin.Context) {
 		return
 	}
 
-	var req dto.DeleteAnswerRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, common.Response{
-			StatusCode: http.StatusBadRequest,
-			Message:    "Invalid JSON request",
-		})
-		return
-	}
 	if err := h.usecase.Delete(questionID, answerID); err != nil {
+		if errors.Is(err, answerErrors.ErrNotFound) {
+			ctx.JSON(404, gin.H{"message": "answer not found"})
+			return
+		}
+		if errors.Is(err, learning.ErrInvalid) {
+			httpapi.Error(ctx, err)
+			return
+		}
 		ctx.JSON(http.StatusInternalServerError, common.Response{
 			StatusCode: http.StatusInternalServerError,
 			Message:    err.Error(),

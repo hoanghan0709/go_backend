@@ -4,13 +4,13 @@ package delivery
 import "github.com/gin-gonic/gin"
 
 func RegisterRoutes(r *gin.Engine, h *Handler,
-	authMiddleware gin.HandlerFunc) {
+	authMiddleware gin.HandlerFunc, adminMiddleware gin.HandlerFunc) {
 
 	question := r.Group("/question")
 
 	protected := question.Group("")
 
-	protected.Use(authMiddleware)
+	protected.Use(authMiddleware, adminMiddleware)
 	{
 		//get List
 		protected.GET("/getList",

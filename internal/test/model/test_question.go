@@ -8,14 +8,14 @@ import (
 type TestQuestion struct {
 	common.BaseModel
 
-	TestID     uint `gorm:"not null;index"`
-	QuestionID uint `gorm:"not null;index"`
+	TestID     uint `gorm:"not null;uniqueIndex:idx_test_question;uniqueIndex:idx_test_order" json:"test_id"`
+	QuestionID uint `gorm:"not null;uniqueIndex:idx_test_question" json:"question_id"`
 
 	// Thứ tự trong đề
-	Order int `gorm:"not null"`
+	Order int `gorm:"not null;uniqueIndex:idx_test_order" json:"order"`
 
 	// Điểm của câu (nếu sau này có trọng số)
-	Score float64 `gorm:"default:1"`
+	Score float64 `gorm:"default:1" json:"score"`
 
-	Question question.Question
+	Question question.Question `json:"question,omitempty"`
 }

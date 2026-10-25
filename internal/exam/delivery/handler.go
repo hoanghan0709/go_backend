@@ -1,11 +1,7 @@
 package delivery
 
-type Usecase interface{}
+import "github.com/han/go-ecommerce/internal/exam/usecase"
 
-type Handler struct {
-	usecase Usecase
-}
+type Handler struct{ usecase usecase.Interface }
 
-func New(usecase Usecase) *Handler {
-	return &Handler{usecase: usecase}
-}
+func New(u usecase.Interface) *Handler { return &Handler{usecase: u} }

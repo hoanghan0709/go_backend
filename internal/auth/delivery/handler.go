@@ -2,7 +2,6 @@ package delivery
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -89,7 +88,6 @@ func (h *Handler) GetUser(c *gin.Context) {
 }
 
 func (h *Handler) Login(c *gin.Context) {
-	fmt.Println("🔥 LOGIN HANDLER CALLED")
 	var request dto.LoginRequest
 	err := c.ShouldBindJSON(&request)
 

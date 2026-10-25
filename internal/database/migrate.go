@@ -22,6 +22,7 @@ import (
 	auth "github.com/han/go-ecommerce/internal/auth/model"
 	category "github.com/han/go-ecommerce/internal/category/model"
 	exam "github.com/han/go-ecommerce/internal/exam/model"
+	"github.com/han/go-ecommerce/internal/learning"
 	question "github.com/han/go-ecommerce/internal/question/model"
 	test "github.com/han/go-ecommerce/internal/test/model"
 	"gorm.io/gorm"
@@ -33,10 +34,12 @@ func autoMigrate(db *gorm.DB) error {
 
 func getModels() []interface{} {
 	return []interface{}{
+		&learning.PracticeAttempt{},
 		&category.Category{},
 		&question.Question{},
 		&model.Answer{},
 		&test.Test{},
+		&test.TestQuestion{},
 		&exam.ExamSession{},
 		&exam.UserAnswer{},
 		&auth.RefreshToken{},
