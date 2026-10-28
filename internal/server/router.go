@@ -2,12 +2,14 @@ package server
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/han/go-ecommerce/internal/adminui"
 	answerDelivery "github.com/han/go-ecommerce/internal/answer/delivery"
 	answerRepo "github.com/han/go-ecommerce/internal/answer/repository"
 	answerUsecase "github.com/han/go-ecommerce/internal/answer/usecase"
 	authDelivery "github.com/han/go-ecommerce/internal/auth/delivery"
 	authRepo "github.com/han/go-ecommerce/internal/auth/repository"
 	authUsecase "github.com/han/go-ecommerce/internal/auth/usecase"
+	"github.com/han/go-ecommerce/internal/crawler"
 	examDelivery "github.com/han/go-ecommerce/internal/exam/delivery"
 	examRepo "github.com/han/go-ecommerce/internal/exam/repository"
 	examUsecase "github.com/han/go-ecommerce/internal/exam/usecase"
@@ -27,6 +29,7 @@ import (
 func NewRouter(db *gorm.DB, jwt *token.Service) *gin.Engine {
 	r := gin.New()
 	r.Use(gin.Logger(), gin.Recovery())
+	adminui.RegisterRoutes(r)
 	auth, admin := middleware.RequireAuth(jwt), middleware.RequireAdmin(db)
 	authService := authUsecase.New(authRepo.NewRepository(db), authRepo.NewRefreshTokenRepository(db), jwt, 7*24*time.Hour)
 	authDelivery.RegisterRoutes(r, authDelivery.New(authService), auth)
@@ -34,7 +37,9 @@ func NewRouter(db *gorm.DB, jwt *token.Service) *gin.Engine {
 	answerDelivery.RegisterRoutes(r, answerDelivery.New(answerUsecase.New(answerRepo.New(db))), auth, admin)
 	exams := examUsecase.New(examRepo.New(db))
 	examDelivery.RegisterRoutes(r, examDelivery.New(exams), auth)
-	learningDelivery.RegisterRoutes(r, learning.New(db), auth, admin, exams.ExpireUser)
+	learningService := learning.New(db)
+	learningDelivery.RegisterRoutes(r, learningService, auth, admin, exams.ExpireUser)
+	crawler.RegisterRoutes(r, crawler.New(learningService), auth, admin)
 	r.GET("/health", func(c *gin.Context) { c.JSON(200, gin.H{"status": "ok"}) })
 	return r
 }

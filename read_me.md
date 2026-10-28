@@ -3,6 +3,7 @@
 Go + Gin + GORM + SQLite. Backend có quản trị ngân hàng câu hỏi, đề cố định/đề ngẫu nhiên, thi thử, ôn tập, lịch sử và thống kê tiến bộ.
 
 - [Hướng dẫn API từng bước cho người mới, có ví dụ xuyên suốt](docs/HUONG_DAN_API_TUNG_BUOC.md)
+- [API cào dữ liệu không tham số: nguồn, cách gọi và chống trùng](docs/CRAWL_DU_LIEU.md)
 - [Theo dõi công việc và quyết định thiết kế](work_follow.md)
 - [Danh sách API, request mẫu và quy tắc nghiệp vụ](docs/API.md)
 - [Luồng HTTP mẫu để thử bằng REST Client](docs/example.http)
@@ -88,4 +89,4 @@ Comment trong code tập trung vào **vì sao** dùng snapshot, transaction, ki�
 
 SQLite dùng một connection để tuần tự hóa transaction ghi, cùng `foreign_keys=ON` và `busy_timeout`. Cách này phù hợp backend quy mô nhỏ; khi cần nhiều server hoặc tải ghi lớn, cần chuyển DB và thiết kế khóa hàng/optimistic locking trước khi tăng connection pool.
 
-Bài hết giờ được chấm khi truy cập phiên thi/lịch sử/thống kê; không cần client giữ kết nối. Chưa có worker tự cập nhật hàng loạt khi không có request. Thống kê hiện tổng hợp từ lịch sử đầy đủ của người dùng; với dữ liệu lớn nên bổ sung bảng tổng hợp. Repository này chưa có giao diện người học/quản trị, bộ câu hỏi chính thức, gửi email hoặc lưu trữ ảnh; trường `image` nhận đường dẫn do admin cung cấp.
+Bài hết giờ được chấm khi truy cập phiên thi/lịch sử/thống kê; không cần client giữ kết nối. Chưa có worker tự cập nhật hàng loạt khi không có request. Thống kê hiện tổng hợp từ lịch sử đầy đủ của người dùng; với dữ liệu lớn nên bổ sung bảng tổng hợp. Repository này chưa có giao diện người học/quản trị, gửi email hoặc lưu trữ file ảnh. Crawler có thể nhập bộ câu hỏi từ nguồn bên thứ ba vào bản nháp để rà soát; không tự xác nhận đây là dữ liệu chính thức mới nhất. Trường `image` nhận đường dẫn từ admin hoặc nguồn crawler.

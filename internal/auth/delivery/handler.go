@@ -2,6 +2,7 @@ package delivery
 
 import (
 	"errors"
+	"github.com/han/go-ecommerce/internal/common/httpapi"
 	"net/http"
 	"strconv"
 
@@ -23,11 +24,7 @@ func New(service usecase.AuthService) *Handler {
 
 func (h *Handler) Register(c *gin.Context) {
 	var req dto.RegisterRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, common.Response{
-			StatusCode: http.StatusBadRequest,
-			Message:    "Invalid request",
-		})
+	if !httpapi.Bind(c, &req) {
 		return
 	}
 
@@ -89,13 +86,7 @@ func (h *Handler) GetUser(c *gin.Context) {
 
 func (h *Handler) Login(c *gin.Context) {
 	var request dto.LoginRequest
-	err := c.ShouldBindJSON(&request)
-
-	if err != nil {
-		c.JSON(http.StatusBadRequest, common.Response{
-			StatusCode: http.StatusBadRequest,
-			Message:    "Invalid login request",
-		})
+	if !httpapi.Bind(c, &request) {
 		return
 	}
 	result, errLogin := h.service.Login(request)
@@ -126,11 +117,7 @@ func (h *Handler) Login(c *gin.Context) {
 func (h *Handler) Refresh(c *gin.Context) {
 	var request dto.RefreshTokenRequest
 
-	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, common.Response{
-			StatusCode: http.StatusBadRequest,
-			Message:    "Invalid refresh request",
-		})
+	if !httpapi.Bind(c, &request) {
 		return
 	}
 

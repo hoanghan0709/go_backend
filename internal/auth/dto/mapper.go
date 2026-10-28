@@ -20,5 +20,6 @@ func ToLoginResponse(user *auth.User,
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 		ExpiresIn:    12 * 60 * 60,
+		Role:         user.Role,
 	}
 }

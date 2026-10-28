@@ -8,7 +8,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	common "github.com/han/go-ecommerce/internal/common/model"
-	commonValidator "github.com/han/go-ecommerce/internal/common/validator"
 	"github.com/han/go-ecommerce/internal/question/dto"
 	questionErrors "github.com/han/go-ecommerce/internal/question/errors"
 	"github.com/han/go-ecommerce/internal/question/usecase"
@@ -38,20 +37,7 @@ func (h *Handler) GetListQuestion(c *gin.Context) {
 func (h *Handler) CreateQuestion(c *gin.Context) {
 	var req dto.CreateQuestionRequest
 
-	if err := c.ShouldBindJSON(&req); err != nil {
-		if messages, ok := commonValidator.ValidationMessages(err); ok {
-			c.JSON(http.StatusBadRequest, common.Response{
-				StatusCode: http.StatusBadRequest,
-				Message:    "Validation failed",
-				Data:       messages,
-			})
-			return
-		}
-
-		c.JSON(http.StatusBadRequest, common.Response{
-			StatusCode: http.StatusBadRequest,
-			Message:    "Invalid JSON request",
-		})
+	if !httpapi.Bind(c, &req) {
 		return
 	}
 

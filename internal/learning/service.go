@@ -53,8 +53,17 @@ func ValidLicense(l string) bool {
 }
 func questionFrom(in QuestionInput) (question.Question, error) {
 	q := question.Question{Title: strings.TrimSpace(in.Title), Content: strings.TrimSpace(in.Content), Image: strings.TrimSpace(in.Image), Explanation: strings.TrimSpace(in.Explanation), LicenseType: in.LicenseType, CategoryID: in.CategoryID, IsCritical: in.IsCritical, Published: in.Published}
-	if q.Title == "" || q.Content == "" || !ValidLicense(string(q.LicenseType)) || q.CategoryID == 0 {
-		return q, Invalid("invalid title, content, license_type or category_id")
+	if q.Title == "" {
+		return q, Invalid("title must not be blank")
+	}
+	if q.Content == "" {
+		return q, Invalid("content must not be blank")
+	}
+	if !ValidLicense(string(q.LicenseType)) {
+		return q, Invalid("license_type must be one of A1, A, B, C1, C, D")
+	}
+	if q.CategoryID == 0 {
+		return q, Invalid("category_id must be a positive integer")
 	}
 	if q.Published && q.Explanation == "" {
 		return q, Invalid("published questions require an explanation")
@@ -74,6 +83,9 @@ func saveQuestion(tx *gorm.DB, id uint, in QuestionInput) (*question.Question, e
 	}
 	var cat category.Category
 	if err = tx.First(&cat, in.CategoryID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, Invalid(fmt.Sprintf("category_id: category %d does not exist or was deleted", in.CategoryID))
+		}
 		return nil, err
 	}
 	if id != 0 {
@@ -82,6 +94,7 @@ func saveQuestion(tx *gorm.DB, id uint, in QuestionInput) (*question.Question, e
 			return nil, err
 		}
 		q.BaseModel = old.BaseModel
+		q.SourceURL = old.SourceURL // Giữ nguồn gốc khi admin biên tập câu đã crawl.
 		q.Position = old.Position
 		if old.CategoryID != q.CategoryID {
 			q.Position = 0
@@ -269,24 +282,34 @@ type TestInput struct {
 
 func saveTest(tx *gorm.DB, id uint, in TestInput) (*test.Test, error) {
 	n := len(in.QuestionIDs)
-	if strings.TrimSpace(in.Name) == "" || strings.TrimSpace(in.Version) == "" || !ValidLicense(in.LicenseType) || in.Duration < 1 || in.Duration > 180 || n < 1 || n > 200 || in.PassingScore < 1 || in.PassingScore > n {
-		return nil, Invalid("invalid test configuration")
+	if err := validateTestConfig(in, n); err != nil {
+		return nil, err
 	}
+
 	seen := map[uint]bool{}
-	for _, qid := range in.QuestionIDs {
+	for i, qid := range in.QuestionIDs {
+		if qid == 0 {
+			return nil, Invalid(fmt.Sprintf("question_ids[%d] must be a positive integer", i))
+		}
 		if seen[qid] {
-			return nil, Invalid("duplicate question in test")
+			return nil, Invalid(fmt.Sprintf("question_ids[%d]: question %d is duplicated", i, qid))
 		}
 		seen[qid] = true
 		var q question.Question
 		if err := tx.Preload("Answers").First(&q, qid).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				return nil, Invalid(fmt.Sprintf("question_ids[%d]: question %d does not exist or was deleted", i, qid))
+			}
 			return nil, err
 		}
-		if !q.Published || string(q.LicenseType) != in.LicenseType {
-			return nil, Invalid("test requires published questions of the same license")
+		if !q.Published {
+			return nil, Invalid(fmt.Sprintf("question_ids[%d]: question %d is unpublished; set published=true before adding it to a test", i, qid))
+		}
+		if string(q.LicenseType) != in.LicenseType {
+			return nil, Invalid(fmt.Sprintf("question_ids[%d]: question %d has license_type=%s; test requires %s", i, qid, q.LicenseType, in.LicenseType))
 		}
 		if err := validation.Answers(q.Answers); err != nil {
-			return nil, Invalid(err.Error())
+			return nil, Invalid(fmt.Sprintf("question_ids[%d]: question %d: %s", i, qid, err))
 		}
 	}
 	t := test.Test{Name: strings.TrimSpace(in.Name), Description: in.Description, LicenseType: in.LicenseType, Version: strings.TrimSpace(in.Version), Duration: in.Duration, TotalQuestion: n, PassingScore: in.PassingScore, CriticalFail: in.CriticalFail, Published: in.Published}
@@ -329,15 +352,39 @@ type GenerateInput struct {
 }
 
 func (s *Service) GenerateTest(in GenerateInput) (out *test.Test, err error) {
+	total := 0
+	for i, quota := range in.Quotas {
+		if quota.Count < 1 || quota.Count > 200 {
+			return nil, Invalid(fmt.Sprintf("quotas[%d].count must be between 1 and 200; received %d", i, quota.Count))
+		}
+		total += quota.Count
+	}
+	if err := validateTestConfig(in.TestInput, total); err != nil {
+		return nil, err
+	}
 	// Chọn câu điểm liệt và câu thường riêng theo từng chủ đề, tránh chọn ngẫu nhiên
 	// rồi vô tình thiếu/thừa số câu điểm liệt so với cấu hình của người quản trị.
 	err = s.DB.Transaction(func(tx *gorm.DB) error {
 		in.QuestionIDs = nil
 		seen := map[uint]bool{}
-		for _, quota := range in.Quotas {
-			if quota.CategoryID == 0 || seen[quota.CategoryID] || quota.Count < 1 || quota.Count > 200 || quota.CriticalCount < 0 || quota.CriticalCount > quota.Count {
-				return Invalid("invalid or duplicate category quota")
+		for i, quota := range in.Quotas {
+			if quota.CategoryID == 0 {
+				return Invalid(fmt.Sprintf("quotas[%d].category_id must be a positive integer", i))
 			}
+			if seen[quota.CategoryID] {
+				return Invalid(fmt.Sprintf("quotas[%d].category_id: category %d is duplicated", i, quota.CategoryID))
+			}
+			if quota.CriticalCount < 0 || quota.CriticalCount > quota.Count {
+				return Invalid(fmt.Sprintf("quotas[%d].critical_count must be between 0 and %d; received %d", i, quota.Count, quota.CriticalCount))
+			}
+			var cat category.Category
+			if e := tx.First(&cat, quota.CategoryID).Error; e != nil {
+				if errors.Is(e, gorm.ErrRecordNotFound) {
+					return Invalid(fmt.Sprintf("quotas[%d].category_id: category %d does not exist or was deleted", i, quota.CategoryID))
+				}
+				return e
+			}
+
 			seen[quota.CategoryID] = true
 			for _, critical := range []bool{true, false} {
 				count := quota.Count - quota.CriticalCount
@@ -352,7 +399,7 @@ func (s *Service) GenerateTest(in GenerateInput) (out *test.Test, err error) {
 					return err
 				}
 				if len(ids) < count {
-					return Invalid(fmt.Sprintf("insufficient questions for category %d (critical=%t)", quota.CategoryID, critical))
+					return Invalid(fmt.Sprintf("quotas[%d]: category %d needs %d published %s questions (critical=%t), but only %d are available", i, quota.CategoryID, count, in.LicenseType, critical, len(ids)))
 				}
 				rand.Shuffle(len(ids), func(i, j int) { ids[i], ids[j] = ids[j], ids[i] })
 				in.QuestionIDs = append(in.QuestionIDs, ids[:count]...)
@@ -393,10 +440,34 @@ func (s *Service) Practice(user, qid, aid uint) (*PracticeAttempt, *question.Que
 			}
 		}
 		if !found {
-			return Invalid("answer does not belong to this question")
+			return Invalid(fmt.Sprintf("answer_id %d does not belong to question %d; choose an answer from this question", aid, qid))
 		}
 		attempt = PracticeAttempt{UserID: user, QuestionID: qid, CategoryID: q.CategoryID, LicenseType: string(q.LicenseType), AnswerID: aid, IsCorrect: correct}
 		return tx.Create(&attempt).Error
 	})
 	return &attempt, &q, err
+}
+
+// Validate business rules separately from HTTP tags: imports and direct service
+// callers must receive the same checks, and generation validates before querying.
+func validateTestConfig(in TestInput, n int) error {
+	if strings.TrimSpace(in.Name) == "" {
+		return Invalid("name must not be blank")
+	}
+	if strings.TrimSpace(in.Version) == "" {
+		return Invalid("version must not be blank")
+	}
+	if !ValidLicense(in.LicenseType) {
+		return Invalid("license_type must be one of A1, A, B, C1, C, D")
+	}
+	if in.Duration < 1 || in.Duration > 180 {
+		return Invalid("duration_minutes must be between 1 and 180")
+	}
+	if n < 1 || n > 200 {
+		return Invalid(fmt.Sprintf("test must contain 1..200 questions; received %d (question_ids or total quotas.count)", n))
+	}
+	if in.PassingScore < 1 || in.PassingScore > n {
+		return Invalid(fmt.Sprintf("passing_score must be between 1 and %d (number of questions); received %d", n, in.PassingScore))
+	}
+	return nil
 }

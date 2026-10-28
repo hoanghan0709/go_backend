@@ -35,6 +35,7 @@ func autoMigrate(db *gorm.DB) error {
 func getModels() []interface{} {
 	return []interface{}{
 		&learning.PracticeAttempt{},
+		&learning.CrawlRecord{},
 		&category.Category{},
 		&question.Question{},
 		&model.Answer{},

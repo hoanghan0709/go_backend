@@ -552,3 +552,165 @@ func TestAdminContentHTTP(t *testing.T) {
 		t.Fatal("deletion changed existing exam")
 	}
 }
+
+func TestCrawlerRequiresAdmin(t *testing.T) {
+	f := setup(t)
+	r := server.NewRouter(f.db, f.jwt)
+	learner, err := f.jwt.GenerateAccessToken(f.user.ID)
+	requireNoError(t, err)
+	admin, err := f.jwt.GenerateAccessToken(f.admin.ID)
+	requireNoError(t, err)
+	for _, tc := range []struct {
+		token  string
+		body   interface{}
+		status int
+	}{{"", nil, 401}, {learner, nil, 403}, {admin, map[string]string{"url": "https://example.com"}, 400}} {
+		rec := request(t, r, tc.token, "POST", "/api/v1/admin/questions/crawl", tc.body)
+		if rec.Code != tc.status {
+			t.Fatalf("expected %d got %d: %s", tc.status, rec.Code, rec.Body.String())
+		}
+	}
+}
+
+// Test invalid payloads at the HTTP boundary and verify rejected writes stay atomic.
+func TestSpecificTestValidation(t *testing.T) {
+	f := setup(t)
+	r := server.NewRouter(f.db, f.jwt)
+	admin, err := f.jwt.GenerateAccessToken(f.admin.ID)
+	requireNoError(t, err)
+	qid := f.questions[0].ID
+	for _, tc := range []struct {
+		name     string
+		mutate   func(*learning.TestInput)
+		fragment string
+	}{
+		{"score", func(in *learning.TestInput) { in.PassingScore = 2 }, "passing_score must be between 1 and 1"},
+		{"missing", func(in *learning.TestInput) { in.QuestionIDs = []uint{999999} }, "question 999999 does not exist"},
+		{"zero", func(in *learning.TestInput) { in.QuestionIDs = []uint{0} }, "question_ids[0] must be a positive integer"},
+		{"duplicate", func(in *learning.TestInput) { in.QuestionIDs = []uint{qid, qid} }, "question_ids[1]"},
+		{"license", func(in *learning.TestInput) { in.LicenseType = "B" }, "test requires B"},
+		{"draft", func(in *learning.TestInput) {
+			requireNoError(t, f.db.Model(&question.Question{}).Where("id = ?", qid).Update("published", false).Error)
+		}, "is unpublished"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			in := learning.TestInput{Name: "Validation", Version: "v1", LicenseType: "A1", Duration: 10, PassingScore: 1, QuestionIDs: []uint{qid}}
+			var before, after int64
+			requireNoError(t, f.db.Model(&test.Test{}).Count(&before).Error)
+			tc.mutate(&in)
+			res := request(t, r, admin, "POST", "/api/v1/admin/tests", in)
+			if res.Code != 400 || !strings.Contains(res.Body.String(), tc.fragment) {
+				t.Fatalf("unexpected %d: %s", res.Code, res.Body)
+			}
+			requireNoError(t, f.db.Model(&test.Test{}).Count(&after).Error)
+			if before != after {
+				t.Fatal("invalid request created a test")
+			}
+		})
+	}
+}
+
+func TestAuthValidationDetails(t *testing.T) {
+	f := setup(t)
+	r := server.NewRouter(f.db, f.jwt)
+	res := request(t, r, "", "POST", "/auth/register", map[string]interface{}{"name": "A", "email": "bad", "password": "short"})
+	if res.Code != 400 {
+		t.Fatal(res.Body.String())
+	}
+	for _, want := range []string{`"field":"name"`, `"field":"email"`, `"field":"password"`, "8 characters"} {
+		if !strings.Contains(res.Body.String(), want) {
+			t.Fatalf("missing %s in %s", want, res.Body)
+		}
+	}
+	if strings.Contains(res.Body.String(), "short") {
+		t.Fatal("password echoed in validation response")
+	}
+}
+
+func TestQuestionAndQuotaValidationDetails(t *testing.T) {
+	f := setup(t)
+	for _, tc := range []struct {
+		name   string
+		modify func(*learning.QuestionInput)
+		want   string
+	}{
+		{"blank", func(in *learning.QuestionInput) { in.Title = "  " }, "title must not be blank"},
+		{"category", func(in *learning.QuestionInput) { in.CategoryID = 999999 }, "category 999999 does not exist"},
+		{"label", func(in *learning.QuestionInput) { in.Answers[1].Label = in.Answers[0].Label }, "answers[1].label duplicates"},
+		{"correct", func(in *learning.QuestionInput) {
+			for i := range in.Answers {
+				in.Answers[i].IsCorrect = true
+			}
+		}, "exactly one is_correct=true"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			in := f.input
+			in.Answers = append([]learning.AnswerInput(nil), in.Answers...)
+			tc.modify(&in)
+			_, err := f.service.SaveQuestion(0, in)
+			if !errors.Is(err, learning.ErrInvalid) || !strings.Contains(err.Error(), tc.want) {
+				t.Fatalf("unexpected error: %v", err)
+			}
+		})
+	}
+	_, err := f.service.GenerateTest(learning.GenerateInput{TestInput: learning.TestInput{Name: "Test", Version: "v1", LicenseType: "A1", Duration: 10, PassingScore: 1}, Quotas: []learning.Quota{{CategoryID: f.input.CategoryID, Count: 1, CriticalCount: 2}}})
+	if !errors.Is(err, learning.ErrInvalid) || !strings.Contains(err.Error(), "quotas[0].critical_count must be between 0 and 1") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestAdminTestDetailIncludesQuestionContent(t *testing.T) {
+	f := setup(t)
+	// Reverse question IDs to ensure the response follows test order, not bank order.
+	_, err := f.service.SaveTest(f.test.ID, learning.TestInput{Name: "Review", LicenseType: "A1", Version: "v1", Duration: 10, PassingScore: 1, Published: true, QuestionIDs: []uint{f.questions[1].ID, f.questions[0].ID}})
+	requireNoError(t, err)
+	r := server.NewRouter(f.db, f.jwt)
+	admin, err := f.jwt.GenerateAccessToken(f.admin.ID)
+	requireNoError(t, err)
+	learner, err := f.jwt.GenerateAccessToken(f.user.ID)
+	requireNoError(t, err)
+	path := fmt.Sprintf("/api/v1/admin/tests/%d", f.test.ID)
+	rec := request(t, r, admin, "GET", path, nil)
+	if rec.Code != 200 {
+		t.Fatal(rec.Body.String())
+	}
+	var result test.Test
+	requireNoError(t, json.Unmarshal(rec.Body.Bytes(), &result))
+	if len(result.Questions) != 2 {
+		t.Fatalf("missing questions: %s", rec.Body)
+	}
+	for i, link := range result.Questions {
+		expected := f.questions[1-i]
+		q := link.Question
+		if link.Order != i+1 || link.QuestionID != expected.ID || q.ID != expected.ID || q.Title != expected.Title || q.Content != expected.Content || q.Explanation != expected.Explanation || !q.Published {
+			t.Fatalf("question content not loaded correctly: %+v", link)
+		}
+		if q.Category.ID != expected.CategoryID || q.Category.Name == "" || len(q.Answers) != len(expected.Answers) {
+			t.Fatalf("missing associations: %+v", q)
+		}
+		correct := 0
+		for j, a := range q.Answers {
+			if a.QuestionID != q.ID || a.Content == "" || a.ID == 0 {
+				t.Fatalf("invalid answer: %+v", a)
+			}
+			if j > 0 && q.Answers[j-1].Order >= a.Order {
+				t.Fatal("answers out of order")
+			}
+			if a.IsCorrect {
+				correct++
+			}
+		}
+		if correct != 1 {
+			t.Fatal("admin answer key missing")
+		}
+	}
+	if res := request(t, r, learner, "GET", path, nil); res.Code != 403 {
+		t.Fatalf("learner can access admin answer key: %d", res.Code)
+	}
+	if res := request(t, r, "", "GET", path, nil); res.Code != 401 {
+		t.Fatalf("anonymous can access detail: %d", res.Code)
+	}
+	if res := request(t, r, admin, "GET", "/api/v1/admin/tests/999999", nil); res.Code != 404 {
+		t.Fatalf("missing test: %d", res.Code)
+	}
+}

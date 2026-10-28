@@ -90,11 +90,7 @@ func (h *Handler) Create(ctx *gin.Context) {
 	}
 
 	var req dto.AnswerRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, common.Response{
-			StatusCode: http.StatusBadRequest,
-			Message:    "Invalid JSON request",
-		})
+	if !httpapi.Bind(ctx, &req) {
 		return
 	}
 
@@ -154,11 +150,7 @@ func (h *Handler) Update(ctx *gin.Context) {
 	}
 
 	var req dto.AnswerRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, common.Response{
-			StatusCode: http.StatusBadRequest,
-			Message:    "Invalid JSON request",
-		})
+	if !httpapi.Bind(ctx, &req) {
 		return
 	}
 

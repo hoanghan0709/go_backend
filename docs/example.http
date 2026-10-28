@@ -93,3 +93,7 @@ Content-Type: application/json
 ### Tiến bộ
 GET {{base}}/api/v1/progress?license_type=A1
 Authorization: Bearer {{learner_token}}
+
+### Cào dữ liệu A1 và B — không body/query, đợi ít nhất 60 giây giữa các lượt thành công
+POST {{base}}/api/v1/admin/questions/crawl
+Authorization: Bearer {{admin_token}}

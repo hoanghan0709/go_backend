@@ -12,5 +12,6 @@ type Answer struct {
 
 	IsCorrect bool `gorm:"default:false" json:"is_correct"`
 
+	// Khóa ngoại nối mỗi phương án với câu hỏi; nhiều dòng có thể cùng QuestionID.
 	QuestionID uint `gorm:"not null;uniqueIndex:idx_answers_question_label;uniqueIndex:idx_answers_question_order" json:"question_id"`
 }

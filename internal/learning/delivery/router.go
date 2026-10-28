@@ -242,7 +242,13 @@ func RegisterRoutes(r *gin.Engine, s *learning.Service, auth, admin gin.HandlerF
 			return
 		}
 		var out test.Test
-		if err := s.DB.Preload("Questions", func(db *gorm.DB) *gorm.DB { return db.Order("\"order\" ASC") }).First(&out, id).Error; err != nil {
+		// Questions chỉ là bảng nối đề–câu. Tải cả câu, chủ đề và phương án
+		// để admin xem trọn đề; route này đã được middleware giới hạn quyền admin.
+		if err := s.DB.
+			Preload("Questions", func(db *gorm.DB) *gorm.DB { return db.Order("\"order\" ASC") }).
+			Preload("Questions.Question.Category").
+			Preload("Questions.Question.Answers", func(db *gorm.DB) *gorm.DB { return db.Order("\"order\" ASC") }).
+			First(&out, id).Error; err != nil {
 			httpapi.Error(c, err)
 			return
 		}

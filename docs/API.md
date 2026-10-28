@@ -27,6 +27,7 @@ Access token hiện có thời hạn 12 giờ, refresh token 7 ngày. Các API b
 | POST | `/admin/questions` | Tạo câu hỏi kèm đáp án |
 | PUT | `/admin/questions/:id` | Thay toàn bộ câu hỏi và tập đáp án |
 | DELETE | `/admin/questions/:id` | Xóa mềm; từ chối nếu còn thuộc đề chưa xóa |
+| POST | `/admin/questions/crawl` | Cào bộ A1 và B từ nguồn cố định; không body/query; xem [hướng dẫn crawler](CRAWL_DU_LIEU.md) |
 | POST | `/admin/questions/import` | Import JSON 1–500 câu trong một transaction |
 | GET | `/admin/tests` | Danh sách đề, gồm bản nháp |
 | GET | `/admin/tests/:id` | Cấu hình và thứ tự question_id của đề |
@@ -156,3 +157,5 @@ Quy tắc:
 - `500`: lỗi nội bộ; API mới không trả chi tiết SQL cho client.
 
 API cũ vẫn giữ dạng response của module cũ và một số mã lỗi cũ; nên dùng `/api/v1` cho phần học/thi và quản trị mới.
+
+Chi tiết phản hồi validation (HTTP 400), đường dẫn trường JSON và lỗi nghiệp vụ: [VALIDATION_ERRORS.md](VALIDATION_ERRORS.md).

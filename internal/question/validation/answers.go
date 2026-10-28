@@ -19,12 +19,25 @@ func Answers(answers []answer.Answer) error {
 		a.Content = strings.TrimSpace(a.Content)
 		a.Label = strings.ToUpper(strings.TrimSpace(a.Label))
 		content := strings.ToLower(a.Content)
-		if content == "" || a.Label == "" || len(a.Label) > 2 || a.Order < 1 {
-			return fmt.Errorf("invalid answer content, label or order")
+		if content == "" {
+			return fmt.Errorf("answers[%d].content must not be blank", i)
 		}
-		if labels[a.Label] || orders[a.Order] || contents[content] {
-			return fmt.Errorf("duplicate answer label, order or content")
+		if a.Label == "" || len(a.Label) > 2 {
+			return fmt.Errorf("answers[%d].label must contain 1..2 bytes", i)
 		}
+		if a.Order < 1 {
+			return fmt.Errorf("answers[%d].order must be a positive integer", i)
+		}
+		if labels[a.Label] {
+			return fmt.Errorf("answers[%d].label duplicates label %s", i, a.Label)
+		}
+		if orders[a.Order] {
+			return fmt.Errorf("answers[%d].order duplicates order %d", i, a.Order)
+		}
+		if contents[content] {
+			return fmt.Errorf("answers[%d].content duplicates another answer", i)
+		}
+
 		labels[a.Label] = true
 		orders[a.Order] = true
 		contents[content] = true
@@ -33,7 +46,7 @@ func Answers(answers []answer.Answer) error {
 		}
 	}
 	if correct != 1 {
-		return fmt.Errorf("question must have exactly one correct answer")
+		return fmt.Errorf("answers must have exactly one is_correct=true; received %d", correct)
 	}
 	return nil
 }
