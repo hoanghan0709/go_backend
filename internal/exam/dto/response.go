@@ -8,7 +8,8 @@ import (
 
 type View struct {
 	ID             uint             `json:"id"`
-	TestID         uint             `json:"test_id"`
+	TestID         *uint            `json:"test_id"`
+	TemplateID     uint             `json:"template_id,omitempty"`
 	Status         enums.ExamStatus `json:"status"`
 	StartedAt      time.Time        `json:"started_at"`
 	ExpiresAt      time.Time        `json:"expires_at"`

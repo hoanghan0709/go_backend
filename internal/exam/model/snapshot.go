@@ -3,12 +3,14 @@ package exam
 // Snapshot giữ nguyên đề và đáp án lúc bắt đầu. Không phụ thuộc vào nội dung
 // ngân hàng câu hỏi khi người dùng xem lại bài thi sau này.
 type Snapshot struct {
-	Name        string             `json:"name"`
-	LicenseType string             `json:"license_type"`
-	Version     string             `json:"version"`
-	Questions   []SnapshotQuestion `json:"questions"`
+	CategoryType string             `json:"category_type,omitempty"`
+	Name         string             `json:"name"`
+	LicenseType  string             `json:"license_type"`
+	Version      string             `json:"version"`
+	Questions    []SnapshotQuestion `json:"questions"`
 }
 type SnapshotQuestion struct {
+	RoadSignID       *uint            `json:"road_sign_id,omitempty"`
 	ID               uint             `json:"id"`
 	Title            string           `json:"title"`
 	Content          string           `json:"content"`

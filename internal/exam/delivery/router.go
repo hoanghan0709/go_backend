@@ -10,6 +10,18 @@ import (
 
 func RegisterRoutes(r *gin.Engine, h *Handler, auth gin.HandlerFunc) {
 	api := r.Group("/api/v1/exams", auth)
+	api.POST("/random", func(c *gin.Context) {
+		var in usecase.RandomRequest
+		if !httpapi.Bind(c, &in) {
+			return
+		}
+		out, err := h.usecase.StartRandom(httpapi.User(c), in)
+		if err != nil {
+			httpapi.Error(c, err)
+			return
+		}
+		c.JSON(201, out)
+	})
 	api.POST("", func(c *gin.Context) {
 		var in dto.StartRequest
 		if !httpapi.Bind(c, &in) {
@@ -27,12 +39,17 @@ func RegisterRoutes(r *gin.Engine, h *Handler, auth gin.HandlerFunc) {
 		if !ok {
 			return
 		}
-		out, n, err := h.usecase.History(httpapi.User(c), f.Page, f.Limit)
+		out, n, err := h.usecase.HistoryFiltered(httpapi.User(c), f)
 		if err != nil {
 			httpapi.Error(c, err)
 			return
 		}
-		httpapi.Page(c, dto.ToHistory(out), n, f)
+		items, err := dto.ToHistory(out)
+		if err != nil {
+			httpapi.Error(c, err)
+			return
+		}
+		httpapi.Page(c, items, n, f)
 	})
 	api.GET("/:id", func(c *gin.Context) {
 		id, ok := httpapi.ID(c, "id")

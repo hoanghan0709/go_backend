@@ -110,6 +110,10 @@ func (s *Service) pause(ctx context.Context) error {
 	}
 }
 func (s *Service) Crawl(ctx context.Context) (*Result, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+
 	if !s.mu.TryLock() {
 		return nil, ErrBusy
 	}

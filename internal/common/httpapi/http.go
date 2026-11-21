@@ -50,12 +50,32 @@ func Bind(c *gin.Context, out interface{}) bool {
 	return true
 }
 func Filter(c *gin.Context) (learning.Filter, bool) {
-	f := learning.Filter{License: c.Query("license_type"), Search: c.Query("search")}
+	f := learning.Filter{License: c.Query("license_type"), Search: c.Query("search"), Status: c.Query("status"), CategoryType: c.Query("category_type"), SignType: c.Query("sign_type")}
+	if f.Status != "" && f.Status != "DOING" && f.Status != "COMPLETED" && f.Status != "TIMEOUT" {
+		c.JSON(400, gin.H{"message": "invalid status"})
+		return f, false
+	}
+	if f.CategoryType != "" && !learning.ValidCategoryType(f.CategoryType) {
+		c.JSON(400, gin.H{"message": "invalid category_type"})
+		return f, false
+	}
+	if f.SignType != "" && !learning.ValidSignType(f.SignType) {
+		c.JSON(400, gin.H{"message": "invalid sign_type"})
+		return f, false
+	}
+	if raw := c.Query("published"); raw != "" {
+		v, err := strconv.ParseBool(raw)
+		if err != nil {
+			c.JSON(400, gin.H{"message": "published must be boolean"})
+			return f, false
+		}
+		f.Published = &v
+	}
 	if f.License != "" && !learning.ValidLicense(f.License) {
 		c.JSON(400, gin.H{"message": "license_type must be one of A1, A, B, C1, C, D"})
 		return f, false
 	}
-	for _, name := range []string{"page", "limit", "category_id"} {
+	for _, name := range []string{"page", "limit", "category_id", "road_sign_id"} {
 		raw := c.Query(name)
 		if raw == "" {
 			continue
@@ -76,6 +96,8 @@ func Filter(c *gin.Context) (learning.Filter, bool) {
 			f.Limit = int(n)
 		case "category_id":
 			f.CategoryID = uint(n)
+		case "road_sign_id":
+			f.RoadSignID = uint(n)
 		}
 	}
 	if raw := c.Query("is_critical"); raw != "" {

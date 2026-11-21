@@ -1,13 +1,14 @@
 package main
 
 import (
+	"log"
+	"os"
+	"time"
+
 	"github.com/han/go-ecommerce/internal/database"
 	"github.com/han/go-ecommerce/internal/server"
 	"github.com/han/go-ecommerce/internal/token"
 	"github.com/joho/godotenv"
-	"log"
-	"os"
-	"time"
 )
 
 func main() {
@@ -22,7 +23,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	jwt, err := token.New(os.Getenv("JWT_SECRET"), 12*time.Hour)
+	jwt, err := token.New(os.Getenv("JWT_SECRET"), 30*time.Second)
 	if err != nil {
 		log.Fatal(err)
 	}

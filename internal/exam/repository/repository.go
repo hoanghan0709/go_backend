@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"github.com/han/go-ecommerce/internal/learning"
 	"time"
 
 	"github.com/han/go-ecommerce/internal/common/enums"
@@ -21,7 +22,21 @@ func (r *Repository) ExpiredIDs(user uint, now time.Time) ([]uint, error) {
 	return ids, err
 }
 func (r *Repository) History(user uint, page, limit int) ([]exam.ExamSession, int64, error) {
+	return r.HistoryFiltered(user, learning.Filter{Page: page, Limit: limit})
+}
+func (r *Repository) HistoryFiltered(user uint, f learning.Filter) ([]exam.ExamSession, int64, error) {
+	page, limit := f.Bounds()
 	db := r.DB.Model(&exam.ExamSession{}).Where("user_id = ?", user)
+	// Filters use immutable snapshot metadata, not today's template/question data.
+	if f.License != "" {
+		db = db.Where("json_extract(snapshot, '$.license_type') = ?", f.License)
+	}
+	if f.CategoryType != "" {
+		db = db.Where("json_extract(snapshot, '$.category_type') = ?", f.CategoryType)
+	}
+	if f.Status != "" {
+		db = db.Where("status = ?", f.Status)
+	}
 	var n int64
 	if err := db.Count(&n).Error; err != nil {
 		return nil, 0, err

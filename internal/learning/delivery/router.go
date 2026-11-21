@@ -2,7 +2,7 @@ package delivery
 
 import (
 	"github.com/gin-gonic/gin"
-	category "github.com/han/go-ecommerce/internal/category/model"
+	authModel "github.com/han/go-ecommerce/internal/auth/model"
 	"github.com/han/go-ecommerce/internal/common/httpapi"
 	exam "github.com/han/go-ecommerce/internal/exam/model"
 	"github.com/han/go-ecommerce/internal/learning"
@@ -16,7 +16,7 @@ import (
 func learnerQuestions(qs []question.Question) []exam.SnapshotQuestion {
 	out := []exam.SnapshotQuestion{}
 	for _, q := range qs {
-		sq := exam.SnapshotQuestion{ID: q.ID, Title: q.Title, Content: q.Content, Image: q.Image, CategoryID: q.CategoryID, IsCritical: q.IsCritical, Answers: []exam.SnapshotAnswer{}}
+		sq := exam.SnapshotQuestion{RoadSignID: q.RoadSignID, ID: q.ID, Title: q.Title, Content: q.Content, Image: q.Image, CategoryID: q.CategoryID, IsCritical: q.IsCritical, Answers: []exam.SnapshotAnswer{}}
 		for _, a := range q.Answers {
 			sq.Answers = append(sq.Answers, exam.SnapshotAnswer{ID: a.ID, Content: a.Content, Label: a.Label, Order: a.Order})
 		}
@@ -26,9 +26,22 @@ func learnerQuestions(qs []question.Question) []exam.SnapshotQuestion {
 }
 func RegisterRoutes(r *gin.Engine, s *learning.Service, auth, admin gin.HandlerFunc, expire func(uint) error) {
 	api := r.Group("/api/v1", auth)
+	RegisterMobileRoutes(r, s, auth, admin)
 	api.GET("/categories", func(c *gin.Context) {
-		var out []category.Category
-		err := s.DB.Order("id").Find(&out).Error
+		f, ok := httpapi.Filter(c)
+		if !ok {
+			return
+		}
+		var user authModel.User
+		if err := s.DB.First(&user, httpapi.User(c)).Error; err != nil {
+			httpapi.Error(c, err)
+			return
+		}
+		isAdmin := user.Role == "admin"
+		if !isAdmin && f.License == "" {
+			f.License = user.CurrentLicenseType
+		}
+		out, err := s.Categories(f, isAdmin)
 		if err != nil {
 			httpapi.Error(c, err)
 			return
@@ -37,7 +50,7 @@ func RegisterRoutes(r *gin.Engine, s *learning.Service, auth, admin gin.HandlerF
 	})
 	listQuestions := func(isAdmin, wrong bool) gin.HandlerFunc {
 		return func(c *gin.Context) {
-			f, ok := httpapi.Filter(c)
+			f, ok := mobileFilter(c, s, !isAdmin)
 			if !ok {
 				return
 			}
@@ -85,7 +98,7 @@ func RegisterRoutes(r *gin.Engine, s *learning.Service, auth, admin gin.HandlerF
 		c.JSON(200, gin.H{"attempt": a, "question": q})
 	})
 	api.GET("/progress", func(c *gin.Context) {
-		f, ok := httpapi.Filter(c)
+		f, ok := mobileFilter(c, s, true)
 		if !ok {
 			return
 		}
@@ -93,7 +106,7 @@ func RegisterRoutes(r *gin.Engine, s *learning.Service, auth, admin gin.HandlerF
 			httpapi.Error(c, err)
 			return
 		}
-		out, err := s.Progress(httpapi.User(c), f.License)
+		out, err := s.ProgressFiltered(httpapi.User(c), f)
 		if err != nil {
 			httpapi.Error(c, err)
 			return
@@ -102,11 +115,20 @@ func RegisterRoutes(r *gin.Engine, s *learning.Service, auth, admin gin.HandlerF
 	})
 	listTests := func(isAdmin bool) gin.HandlerFunc {
 		return func(c *gin.Context) {
-			f, ok := httpapi.Filter(c)
+			f, ok := mobileFilter(c, s, !isAdmin)
 			if !ok {
 				return
 			}
 			db := s.DB.Model(&test.Test{})
+			if f.CategoryType != "" {
+				db = db.Where("category_type = ?", f.CategoryType)
+			}
+			if f.Search != "" {
+				db = db.Where("name LIKE ?", "%"+f.Search+"%")
+			}
+			if isAdmin && f.Published != nil {
+				db = db.Where("published = ?", *f.Published)
+			}
 			if !isAdmin {
 				db = db.Where("published = ?", true)
 			}
@@ -129,6 +151,18 @@ func RegisterRoutes(r *gin.Engine, s *learning.Service, auth, admin gin.HandlerF
 	api.GET("/tests", listTests(false))
 	a := api.Group("/admin", admin)
 	a.GET("/questions", listQuestions(true, false))
+	a.POST("/questions/publish", func(c *gin.Context) {
+		var in learning.PublishQuestionsInput
+		if !httpapi.Bind(c, &in) {
+			return
+		}
+		out, err := s.PublishQuestions(in.QuestionIDs)
+		if err != nil {
+			httpapi.Error(c, err)
+			return
+		}
+		c.JSON(200, out)
+	})
 	a.GET("/questions/:id", func(c *gin.Context) {
 		id, ok := httpapi.ID(c, "id")
 		if !ok {

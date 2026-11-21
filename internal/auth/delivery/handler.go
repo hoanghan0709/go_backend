@@ -2,9 +2,10 @@ package delivery
 
 import (
 	"errors"
-	"github.com/han/go-ecommerce/internal/common/httpapi"
 	"net/http"
 	"strconv"
+
+	"github.com/han/go-ecommerce/internal/common/httpapi"
 
 	"github.com/gin-gonic/gin"
 	commonError "github.com/han/go-ecommerce/internal/auth/common_error"
@@ -150,7 +151,7 @@ func (h *Handler) Refresh(c *gin.Context) {
 		Data: dto.TokenResponse{
 			AccessToken:  result.AccessToken,
 			RefreshToken: result.RefreshToken,
-			ExpiresIn:    12 * 60 * 60,
+			ExpiresIn:    30, //12 * 60 * 60,
 		},
 	})
 }

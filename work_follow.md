@@ -169,3 +169,46 @@ Kiểm tra cuối cho crawler: `go test -race ./...` và `go vet ./...` đạt (
 - Tạo mới `docs/TAO_DE_TIEP_TUC_THI_VA_THI_LAI.md` theo yêu cầu xuất Markdown, giữ nguyên các tài liệu trước.
 - Trình bày kiểu hỏi/đáp, tạo đề demo hai câu từ đầu, phân biệt test_id/exam_id, tiếp tục bằng GET và thi lại bằng POST; thêm điều kiện, tình huống lỗi, sơ đồ và cURL Postman.
 - Đối chiếu route/DTO và kiểm tra cú pháp cURL, body JSON, response ví dụ, liên kết nội bộ. Chỉ viết tài liệu, không gọi API ghi dữ liệu hay tạo thêm đề trong DB.
+
+
+## Trang quản trị local và danh mục REST API — 28/10/2026
+
+- Thêm giao diện `/admin/` bằng HTML/CSS/JavaScript, nhúng asset trong binary Go; không cần Node để chạy, không cần CORS riêng.
+- Đăng nhập admin, refresh token, phiên theo tab, đăng xuất local; bảo vệ dữ liệu bằng middleware hiện có.
+- Dashboard, CRUD chủ đề/câu hỏi/đề, lọc và phân trang; biên tập đáp án/lời giải/ảnh URL/trạng thái xuất bản.
+- Chọn câu cho đề bằng checkbox, sắp xếp thứ tự; sinh đề theo quota chủ đề và câu điểm liệt.
+- Import JSON qua file hoặc nội dung dán, tải mẫu; crawler bằng thao tác có xác nhận.
+- Danh mục 39 API có method, path, quyền và chú thích trong giao diện và `docs/CHUC_NANG_VA_REST_API.md`; hướng dẫn chạy tại `docs/ADMIN_LOCAL.md`.
+- Test tự đối chiếu danh mục với router thật, kiểm tra asset, header bảo vệ và quyền truy cập dữ liệu.
+- Kiểm thử Chrome headless trên database tạm: login, tạo chủ đề, thêm/sửa câu hỏi, escape HTML, tạo/mở/sinh/xóa đề, import JSON, refresh token và logout; kiểm tra giao diện desktop/mobile.
+- Không chạy crawler nguồn thật hoặc thao tác CRUD lên database dự án trong đợt kiểm thử giao diện. Đăng xuất local chưa thu hồi token server; upload ảnh/quản trị người dùng vẫn là chức năng tương lai.
+- Kiểm tra cuối: `go test ./...`, `go vet ./...`, `node --check internal/adminui/dist/app.js` và `git diff --check` đạt; Chrome QA đạt sau chỉnh nút phân trang và đăng xuất mobile. Các server và Chrome QA đã được dừng.
+
+## Xuất bản nhiều câu hỏi từ giao diện — 28/10/2026
+
+- Checkbox từng câu nháp, chọn tất cả câu nháp trên trang, giữ lựa chọn qua phân trang (tối đa 500), bỏ chọn và xác nhận xuất bản; đổi bộ lọc/màn hình sẽ xóa lựa chọn.
+- API admin `POST /api/v1/admin/questions/publish` nhận `question_ids`, kiểm tra nội dung hiện tại và chỉ cập nhật trạng thái. Giữ nguyên nội dung, nguồn, ID câu và ID đáp án.
+- Response `published_ids` và `failed` theo từng ID: câu hợp lệ xuất bản, câu lỗi giữ nguyên; lỗi hạ tầng rollback transaction. UI giữ lựa chọn của câu lỗi để sửa và thử lại.
+- Cập nhật hướng dẫn UI, API và danh mục (40 API). Kiểm thử Go xác minh phân quyền, ID không hợp lệ/trùng/giới hạn, thiếu lời giải, sai đáp án, câu đã xóa, kết quả một phần, tính lặp lại an toàn và bảo toàn ID đáp án.
+- `go test ./...`, `go vet ./...`, kiểm tra cú pháp JS và diff đạt. Chrome QA dùng DB tạm xác minh chọn qua trang, trạng thái checkbox, xuất bản một phần, bỏ chọn/reset bộ lọc và mobile; không xuất bản dữ liệu thật.
+
+## Sửa phân trang chọn câu cho đề và giải thích luồng learner — 28/10/2026
+
+- Nguyên nhân trang trống: picker lấy danh sách admin (gồm nháp), backend phân trang trước, frontend mới loại câu chưa xuất bản. Demo ở cuối ngân hàng nên rơi vào trang 13.
+- Picker dùng `/api/v1/practice/questions` (admin cũng có quyền gọi) để lọc published ở backend trước COUNT/LIMIT/OFFSET. Không cần khóa đáp án khi chọn câu cho đề. Ngân hàng quản trị vẫn hiển thị nháp để biên tập.
+- Test hồi quy Go và Chrome với 250 câu nháp + 5 câu xuất bản: picker hiện 5 câu ngay trang 1/1, nút tiếp bị khóa, chọn/lưu đề thành công; ngân hàng quản trị vẫn có đủ 255 câu. Kiểm thử dùng DB tạm, dữ liệu thật chỉ đọc tổng hợp để chẩn đoán.
+- Thêm `docs/LUONG_LEARNER.md`: luồng đăng nhập → chọn hạng → ôn/thi → lịch sử/câu sai/tiến bộ; nội dung xuất bản dùng chung, lịch sử theo user_id. Chưa có UI learner hoặc gán đề theo user/lớp.
+
+## Mobile: lưu hạng, random, loại chủ đề và biển báo — 28/10/2026
+
+- `PUT /api/v1/me/license`, `GET /api/v1/me`; login/profile có current_license_type. Lưu theo user trong JWT, làm mặc định cho danh sách learner; explicit license ưu tiên, không sửa phiên đang thi.
+- Chủ đề có type, metadata `/category-types`, filter category_type/category_id/license và bảng chủ đề learner có học liệu xuất bản. Chủ đề cũ mặc định UNCATEGORIZED, không tự suy đoán từ tên.
+- CRUD road-signs theo hạng/nhóm, metadata sign types, danh sách/chi tiết cho learner, câu liên kết qua road_sign_id; chặn sai hạng/chủ đề, xóa biển còn tham chiếu hoặc thu hồi biển khi còn câu xuất bản.
+- CRUD exam-templates quản trị, danh sách learner; `POST /api/v1/exams/random` tạo phiên/snapshot riêng trong transaction, dùng quota server. Không tạo Test dùng chung; test_id=null, template_id là metadata. Dùng lại save/submit/history/timeout/progress.
+- Filter bổ sung cho câu/đề/template/biển, lịch sử theo snapshot license/category/status, tiến bộ theo license/category_type.
+- Web local thêm Học biển báo, Cấu hình đề random, loại chủ đề/đề và lựa chọn biển liên kết khi biên tập câu.
+- Migration SQLite có transaction, tạm tắt enforcement để dựng lại bảng được tham chiếu, foreign_key_check trước commit, khôi phục enforcement; lỗi rollback. Thử trên bản sao DB giữ đủ 855 câu và 3 phiên cũ, không lỗi FK.
+- Kiểm thử mới: migration bảo toàn tham chiếu/idempotence/rollback; profile ownership, các filter, sign CRUD/link, template, random thiếu dữ liệu/ownership/snapshot/chấm điểm/history. Sửa crawler trả context.Canceled ngay khi request đã hủy để loại test không ổn định được phát hiện khi chạy toàn bộ suite.
+- Chrome QA trên bản sao DB: tạo/sửa chủ đề SIGN, biển báo, câu liên kết, template; learner lưu hạng, đọc biển, random, lưu và nộp bài thành công; layout mobile không tràn ngang.
+- Tài liệu: `docs/MOBILE_API.md` (contract, request/response, filter, migration, code notes), cập nhật luồng learner, hướng dẫn admin và danh mục 59 API đối chiếu router.
+- Kiểm tra cuối: `go test -race ./...`, `go vet ./...`, `node --check internal/adminui/dist/app.js` và `git diff --check` đạt. Không tạo/phân loại/xuất bản học liệu hoặc template vào database thật trong các thao tác QA.

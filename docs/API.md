@@ -1,5 +1,9 @@
 # API backend ôn thi bằng lái
 
+Xem [bảng chức năng và REST API kèm chú thích](CHUC_NANG_VA_REST_API.md) và [trang quản trị local](ADMIN_LOCAL.md).
+
+API mobile mới (lưu hạng, random, loại chủ đề, biển báo, filter): [MOBILE_API.md](MOBILE_API.md). Danh mục đầy đủ hiện có **59 endpoint**.
+
 Base URL mặc định: `http://localhost:8080`. Body JSON, header `Content-Type: application/json`.
 
 ## Xác thực và quyền
@@ -28,6 +32,7 @@ Access token hiện có thời hạn 12 giờ, refresh token 7 ngày. Các API b
 | PUT | `/admin/questions/:id` | Thay toàn bộ câu hỏi và tập đáp án |
 | DELETE | `/admin/questions/:id` | Xóa mềm; từ chối nếu còn thuộc đề chưa xóa |
 | POST | `/admin/questions/crawl` | Cào bộ A1 và B từ nguồn cố định; không body/query; xem [hướng dẫn crawler](CRAWL_DU_LIEU.md) |
+| POST | `/admin/questions/publish` | Xuất bản 1–500 câu bằng `{ "question_ids": [1, 2] }`; trả `published_ids` và `failed: [{id, message}]`. Câu hợp lệ được xuất bản, câu lỗi giữ nguyên; lỗi DB hoàn tác toàn bộ. Giữ nguyên ID đáp án. |
 | POST | `/admin/questions/import` | Import JSON 1–500 câu trong một transaction |
 | GET | `/admin/tests` | Danh sách đề, gồm bản nháp |
 | GET | `/admin/tests/:id` | Cấu hình và thứ tự question_id của đề |
@@ -103,7 +108,7 @@ Mỗi chủ đề chỉ khai báo một lần; `critical_count` nằm trong `0..
 | GET | `/practice/questions` | Câu hỏi xuất bản; không có khóa đáp án/lời giải |
 | POST | `/practice/questions/:id/answer` | `{ "answer_id": 123 }`; lưu lượt luyện và trả lời giải/đáp án |
 | GET | `/practice/wrong-questions` | Câu có lần làm gần nhất sai hoặc bỏ trống |
-| GET | `/progress` | Tỷ lệ đỗ, độ chính xác từng chủ đề, 20 lượt thi gần nhất, chủ đề nên ôn |
+| GET | `/progress` | Tổng câu, số câu đã đạt theo kết quả gần nhất; tỷ lệ đỗ, độ chính xác từng chủ đề, 20 lượt thi gần nhất, chủ đề nên ôn |
 | GET | `/tests` | Danh sách đề đã xuất bản, không kèm khóa đáp án |
 
 Danh sách câu hỏi hỗ trợ `page`, `limit`, `license_type`, `category_id`, `is_critical=true|false`, `search`. Mặc định trang 1, 20 phần tử; tối đa 100 phần tử/trang. Danh sách đề hỗ trợ `page`, `limit`, `license_type`. Progress hỗ trợ `license_type`.
@@ -159,3 +164,5 @@ Quy tắc:
 API cũ vẫn giữ dạng response của module cũ và một số mã lỗi cũ; nên dùng `/api/v1` cho phần học/thi và quản trị mới.
 
 Chi tiết phản hồi validation (HTTP 400), đường dẫn trường JSON và lỗi nghiệp vụ: [VALIDATION_ERRORS.md](VALIDATION_ERRORS.md).
+
+Chi tiết các trường `total_questions`, `mastered_questions` và cách hiển thị tiến độ theo hạng: [MOBILE_API.md](MOBILE_API.md#tiến-độ-số-câu-đã-đạt-theo-hạng-bằng).

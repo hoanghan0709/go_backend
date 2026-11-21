@@ -1,0 +1,422 @@
+[
+  {
+    "group": "Tài khoản và hệ thống",
+    "access": "Công khai",
+    "method": "POST",
+    "path": "/auth/register",
+    "note": "Đăng ký bằng name, email, password; luôn tạo learner, không cho tự cấp admin."
+  },
+  {
+    "group": "Tài khoản và hệ thống",
+    "access": "Công khai",
+    "method": "POST",
+    "path": "/auth/login",
+    "note": "Đăng nhập bằng email/password; trả access_token, refresh_token và role trong data."
+  },
+  {
+    "group": "Tài khoản và hệ thống",
+    "access": "Công khai",
+    "method": "POST",
+    "path": "/auth/refresh",
+    "note": "Gửi refresh_token để lấy cặp token mới; refresh token cũ bị thu hồi."
+  },
+  {
+    "group": "Tài khoản và hệ thống",
+    "access": "Công khai",
+    "method": "GET",
+    "path": "/health",
+    "note": "Kiểm tra HTTP server; không kiểm tra toàn bộ trạng thái database."
+  },
+  {
+    "group": "Tài khoản và hệ thống",
+    "access": "Đăng nhập",
+    "method": "GET",
+    "path": "/auth/getProfile",
+    "note": "Lấy ID, tên, email, role và current_license_type của người hiện tại."
+  },
+  {
+    "group": "Chủ đề",
+    "access": "Đăng nhập",
+    "method": "GET",
+    "path": "/api/v1/categories",
+    "note": "Danh sách chủ đề có type; lọc category_type/search. Learner chỉ nhận chủ đề có học liệu xuất bản phù hợp license_type (mặc định hạng đã lưu). Admin thấy cả chủ đề rỗng."
+  },
+  {
+    "group": "Chủ đề",
+    "access": "Admin",
+    "method": "POST",
+    "path": "/api/v1/admin/categories",
+    "note": "Tạo chủ đề: name, description, type; mặc định UNCATEGORIZED."
+  },
+  {
+    "group": "Chủ đề",
+    "access": "Admin",
+    "method": "PUT",
+    "path": "/api/v1/admin/categories/:id",
+    "note": "Sửa tên/mô tả/type; không bỏ SIGN khi còn bản ghi biển báo."
+  },
+  {
+    "group": "Chủ đề",
+    "access": "Admin",
+    "method": "DELETE",
+    "path": "/api/v1/admin/categories/:id",
+    "note": "Xóa mềm chủ đề; từ chối nếu còn câu hỏi."
+  },
+  {
+    "group": "Ngân hàng câu hỏi",
+    "access": "Admin",
+    "method": "GET",
+    "path": "/api/v1/admin/questions",
+    "note": "Cả nháp/xuất bản và khóa đáp án; lọc license_type/category_type/category_id/road_sign_id/sign_type/published/is_critical/search, phân trang."
+  },
+  {
+    "group": "Ngân hàng câu hỏi",
+    "access": "Admin",
+    "method": "GET",
+    "path": "/api/v1/admin/questions/:id",
+    "note": "Chi tiết câu hỏi, chủ đề, phương án và đáp án đúng."
+  },
+  {
+    "group": "Ngân hàng câu hỏi",
+    "access": "Admin",
+    "method": "POST",
+    "path": "/api/v1/admin/questions",
+    "note": "Tạo câu kèm đáp án; road_sign_id tùy chọn, phải khớp hạng/chủ đề. Ít nhất hai đáp án, đúng một đáp án đúng."
+  },
+  {
+    "group": "Ngân hàng câu hỏi",
+    "access": "Admin",
+    "method": "PUT",
+    "path": "/api/v1/admin/questions/:id",
+    "note": "Thay toàn bộ nội dung và tập đáp án. Đặt published để xuất bản/thu hồi; xuất bản cần lời giải. ID đáp án có thể đổi."
+  },
+  {
+    "group": "Ngân hàng câu hỏi",
+    "access": "Admin",
+    "method": "DELETE",
+    "path": "/api/v1/admin/questions/:id",
+    "note": "Xóa mềm câu hỏi; từ chối nếu đang thuộc một đề chưa xóa."
+  },
+  {
+    "group": "Ngân hàng câu hỏi",
+    "access": "Admin",
+    "method": "POST",
+    "path": "/api/v1/admin/questions/publish",
+    "note": "Body {question_ids:[...]}, 1–500 ID duy nhất. Xuất bản câu hợp lệ, trả published_ids và failed theo từng ID. Giữ nguyên nội dung và ID đáp án; câu lỗi không thay đổi."
+  },
+  {
+    "group": "Ngân hàng câu hỏi",
+    "access": "Admin",
+    "method": "POST",
+    "path": "/api/v1/admin/questions/import",
+    "note": "Body {questions:[...]}; 1–500 câu, tối đa 5 MiB, lỗi một dòng hoàn tác toàn bộ. Nhập lại có thể tạo trùng."
+  },
+  {
+    "group": "Ngân hàng câu hỏi",
+    "access": "Admin",
+    "method": "POST",
+    "path": "/api/v1/admin/questions/crawl",
+    "note": "Không body/query. Cào A1/B từ nguồn cố định, tạo chủ đề và câu nháp; chống trùng theo nguồn/hạng; cooldown 60 giây sau thành công."
+  },
+  {
+    "group": "Quản lý đề thi",
+    "access": "Admin",
+    "method": "GET",
+    "path": "/api/v1/admin/tests",
+    "note": "Danh sách đề nháp và xuất bản; lọc license_type, phân trang page/limit."
+  },
+  {
+    "group": "Quản lý đề thi",
+    "access": "Admin",
+    "method": "GET",
+    "path": "/api/v1/admin/tests/:id",
+    "note": "Chi tiết cấu hình và câu hỏi: questions[i].question, gồm chủ đề và đáp án đúng."
+  },
+  {
+    "group": "Quản lý đề thi",
+    "access": "Admin",
+    "method": "POST",
+    "path": "/api/v1/admin/tests",
+    "note": "Tạo đề cố định; category_type tùy chọn để giới hạn chủ đề. 1–200 câu đã xuất bản cùng hạng."
+  },
+  {
+    "group": "Quản lý đề thi",
+    "access": "Admin",
+    "method": "PUT",
+    "path": "/api/v1/admin/tests/:id",
+    "note": "Thay cấu hình và danh sách câu; published điều khiển xuất bản, critical_fail bật/tắt quy tắc điểm liệt."
+  },
+  {
+    "group": "Quản lý đề thi",
+    "access": "Admin",
+    "method": "DELETE",
+    "path": "/api/v1/admin/tests/:id",
+    "note": "Xóa mềm đề; giữ snapshot và lịch sử của phiên thi đã tạo."
+  },
+  {
+    "group": "Quản lý đề thi",
+    "access": "Admin",
+    "method": "POST",
+    "path": "/api/v1/admin/tests/generate",
+    "note": "Sinh và lưu đề bằng quotas: category_id, count, critical_count; không lặp câu, báo lỗi khi thiếu dữ liệu."
+  },
+  {
+    "group": "Thi thử và lịch sử",
+    "access": "Đăng nhập",
+    "method": "GET",
+    "path": "/api/v1/tests",
+    "note": "Đề cố định đã xuất bản; lọc hạng (mặc định đã lưu), category_type, search và phân trang."
+  },
+  {
+    "group": "Thi thử và lịch sử",
+    "access": "Đăng nhập",
+    "method": "POST",
+    "path": "/api/v1/exams",
+    "note": "Body {test_id}; tạo phiên thi mới và snapshot. Thi lại cũng gọi API này, nhận exam_id mới."
+  },
+  {
+    "group": "Thi thử và lịch sử",
+    "access": "Đăng nhập",
+    "method": "GET",
+    "path": "/api/v1/exams",
+    "note": "Lịch sử của chính user; lọc license_type/category_type/status, phân trang. Phiên random có test_id=null và template_id."
+  },
+  {
+    "group": "Thi thử và lịch sử",
+    "access": "Đăng nhập",
+    "method": "GET",
+    "path": "/api/v1/exams/:id",
+    "note": "Lấy bài đang làm để tiếp tục, hoặc xem kết quả/lời giải khi kết thúc. :id là exam_id, không phải test_id."
+  },
+  {
+    "group": "Thi thử và lịch sử",
+    "access": "Đăng nhập",
+    "method": "PUT",
+    "path": "/api/v1/exams/:id/answers/:question_id",
+    "note": "Body {answer_id}; lưu/thay lựa chọn, answer_id=0 để bỏ chọn. Chỉ chủ phiên được sửa trước khi hết giờ."
+  },
+  {
+    "group": "Thi thử và lịch sử",
+    "access": "Đăng nhập",
+    "method": "POST",
+    "path": "/api/v1/exams/:id/submit",
+    "note": "Nộp và chấm ở server; xử lý điểm đạt, điểm liệt và hết giờ; nộp lại không tạo kết quả mới."
+  },
+  {
+    "group": "Ôn tập và tiến bộ",
+    "access": "Đăng nhập",
+    "method": "GET",
+    "path": "/api/v1/practice/questions",
+    "note": "Câu đã xuất bản, không lộ đáp án; lọc hạng (mặc định đã lưu), category_type/category_id/road_sign_id/sign_type/is_critical/search, phân trang."
+  },
+  {
+    "group": "Ôn tập và tiến bộ",
+    "access": "Đăng nhập",
+    "method": "POST",
+    "path": "/api/v1/practice/questions/:id/answer",
+    "note": "Body {answer_id}; lưu lượt luyện, trả đúng/sai cùng câu hỏi và lời giải."
+  },
+  {
+    "group": "Ôn tập và tiến bộ",
+    "access": "Đăng nhập",
+    "method": "GET",
+    "path": "/api/v1/practice/wrong-questions",
+    "note": "Câu sai/bỏ trống theo lần làm gần nhất; câu đã sửa đúng được loại ra; có bộ lọc và phân trang."
+  },
+  {
+    "group": "Ôn tập và tiến bộ",
+    "access": "Đăng nhập",
+    "method": "GET",
+    "path": "/api/v1/progress",
+    "note": "Tiến bộ riêng theo license_type (mặc định hạng đã lưu) và category_type; tỷ lệ đỗ, chủ đề và 20 lượt thi gần nhất."
+  },
+  {
+    "group": "API legacy — tương thích hệ thống cũ",
+    "access": "Admin",
+    "method": "GET",
+    "path": "/question/getList",
+    "note": "API danh sách câu hỏi cũ; ưu tiên GET /api/v1/admin/questions."
+  },
+  {
+    "group": "API legacy — tương thích hệ thống cũ",
+    "access": "Admin",
+    "method": "POST",
+    "path": "/question/create",
+    "note": "API tạo câu hỏi cũ; giao diện mới dùng POST /api/v1/admin/questions để tạo cùng đáp án."
+  },
+  {
+    "group": "API legacy — tương thích hệ thống cũ",
+    "access": "Admin",
+    "method": "POST",
+    "path": "/questions/:question_id/answers",
+    "note": "Thêm phương án; phải giữ quy tắc đáp án hợp lệ."
+  },
+  {
+    "group": "API legacy — tương thích hệ thống cũ",
+    "access": "Admin",
+    "method": "GET",
+    "path": "/questions/:question_id/answers",
+    "note": "Danh sách phương án của một câu, có khóa đáp án đúng."
+  },
+  {
+    "group": "API legacy — tương thích hệ thống cũ",
+    "access": "Admin",
+    "method": "PUT",
+    "path": "/questions/:question_id/answers/:answer_id",
+    "note": "Sửa một phương án; bị chặn nếu làm câu có 0 hoặc 2 đáp án đúng. Đổi đáp án đúng nên PUT toàn câu hỏi."
+  },
+  {
+    "group": "API legacy — tương thích hệ thống cũ",
+    "access": "Admin",
+    "method": "DELETE",
+    "path": "/questions/:question_id/answers/:answer_id",
+    "note": "Xóa phương án; phải còn ít nhất hai phương án và đúng một đáp án đúng."
+  },
+  {
+    "group": "API legacy — tương thích hệ thống cũ",
+    "access": "Admin",
+    "method": "GET",
+    "path": "/answer/list_answer",
+    "note": "Danh sách đáp án theo API cũ; chỉ admin được truy cập."
+  },
+  {
+    "group": "Mobile: hạng bằng, random và biển báo",
+    "access": "Đăng nhập",
+    "method": "GET",
+    "path": "/api/v1/me",
+    "note": "Hồ sơ hiện tại, gồm current_license_type."
+  },
+  {
+    "group": "Mobile: hạng bằng, random và biển báo",
+    "access": "Đăng nhập",
+    "method": "PUT",
+    "path": "/api/v1/me/license",
+    "note": "Body {license_type}; lưu hạng bằng mặc định cho người trong JWT, không thay phiên thi đang làm."
+  },
+  {
+    "group": "Mobile: hạng bằng, random và biển báo",
+    "access": "Đăng nhập",
+    "method": "GET",
+    "path": "/api/v1/category-types",
+    "note": "Mã loại chủ đề và tên hiển thị cho tab mobile."
+  },
+  {
+    "group": "Mobile: hạng bằng, random và biển báo",
+    "access": "Đăng nhập",
+    "method": "GET",
+    "path": "/api/v1/road-sign-types",
+    "note": "Mã nhóm biển báo và tên hiển thị."
+  },
+  {
+    "group": "Mobile: hạng bằng, random và biển báo",
+    "access": "Đăng nhập",
+    "method": "POST",
+    "path": "/api/v1/exams/random",
+    "note": "Body {} hoặc {license_type,template_id,category_type}; tạo phiên riêng từ template đã xuất bản, test_id=null. Thiếu câu báo lỗi, không tạo đề công khai."
+  },
+  {
+    "group": "Mobile: hạng bằng, random và biển báo",
+    "access": "Đăng nhập",
+    "method": "GET",
+    "path": "/api/v1/exam-templates",
+    "note": "Cấu hình random đã xuất bản; lọc license_type/category_type, phân trang; mặc định hạng đã lưu."
+  },
+  {
+    "group": "Mobile: hạng bằng, random và biển báo",
+    "access": "Đăng nhập",
+    "method": "GET",
+    "path": "/api/v1/road-signs",
+    "note": "Học liệu biển đã xuất bản; lọc hạng, nhóm biển, chủ đề, tìm kiếm và phân trang."
+  },
+  {
+    "group": "Mobile: hạng bằng, random và biển báo",
+    "access": "Đăng nhập",
+    "method": "GET",
+    "path": "/api/v1/road-signs/:id",
+    "note": "Chi tiết biển đã xuất bản theo hạng đã lưu hoặc license_type explicit."
+  },
+  {
+    "group": "Mobile: hạng bằng, random và biển báo",
+    "access": "Đăng nhập",
+    "method": "GET",
+    "path": "/api/v1/road-signs/:id/questions",
+    "note": "Câu luyện đã xuất bản liên kết với biển, không trả đáp án đúng; dùng API practice để trả lời."
+  },
+  {
+    "group": "Mobile: hạng bằng, random và biển báo",
+    "access": "Admin",
+    "method": "GET",
+    "path": "/api/v1/admin/road-signs",
+    "note": "Danh sách biển báo, gồm nháp; lọc/phân trang."
+  },
+  {
+    "group": "Mobile: hạng bằng, random và biển báo",
+    "access": "Admin",
+    "method": "GET",
+    "path": "/api/v1/admin/road-signs/:id",
+    "note": "Chi tiết biển báo."
+  },
+  {
+    "group": "Mobile: hạng bằng, random và biển báo",
+    "access": "Admin",
+    "method": "POST",
+    "path": "/api/v1/admin/road-signs",
+    "note": "Tạo biển báo; xem MOBILE_API.md về body và quy tắc."
+  },
+  {
+    "group": "Mobile: hạng bằng, random và biển báo",
+    "access": "Admin",
+    "method": "PUT",
+    "path": "/api/v1/admin/road-signs/:id",
+    "note": "Cập nhật toàn bộ biển báo."
+  },
+  {
+    "group": "Mobile: hạng bằng, random và biển báo",
+    "access": "Admin",
+    "method": "DELETE",
+    "path": "/api/v1/admin/road-signs/:id",
+    "note": "Xóa mềm biển báo; biển có câu tham chiếu bị chặn, template không ảnh hưởng snapshot cũ."
+  },
+  {
+    "group": "Mobile: hạng bằng, random và biển báo",
+    "access": "Admin",
+    "method": "GET",
+    "path": "/api/v1/admin/exam-templates",
+    "note": "Danh sách cấu hình đề ngẫu nhiên, gồm nháp; lọc/phân trang."
+  },
+  {
+    "group": "Mobile: hạng bằng, random và biển báo",
+    "access": "Admin",
+    "method": "GET",
+    "path": "/api/v1/admin/exam-templates/:id",
+    "note": "Chi tiết cấu hình đề ngẫu nhiên."
+  },
+  {
+    "group": "Mobile: hạng bằng, random và biển báo",
+    "access": "Admin",
+    "method": "POST",
+    "path": "/api/v1/admin/exam-templates",
+    "note": "Tạo cấu hình đề ngẫu nhiên; xem MOBILE_API.md về body và quy tắc."
+  },
+  {
+    "group": "Mobile: hạng bằng, random và biển báo",
+    "access": "Admin",
+    "method": "PUT",
+    "path": "/api/v1/admin/exam-templates/:id",
+    "note": "Cập nhật toàn bộ cấu hình đề ngẫu nhiên."
+  },
+  {
+    "group": "Mobile: hạng bằng, random và biển báo",
+    "access": "Admin",
+    "method": "DELETE",
+    "path": "/api/v1/admin/exam-templates/:id",
+    "note": "Xóa mềm cấu hình đề ngẫu nhiên; biển có câu tham chiếu bị chặn, template không ảnh hưởng snapshot cũ."
+  },
+  {
+    "group": "Học và luyện thi",
+    "access": "Đăng nhập",
+    "method": "GET",
+    "path": "/api/v1/license-types",
+    "note": "Danh sách hạng bằng được hệ thống hỗ trợ; code gửi vào PUT /api/v1/me/license, name dùng hiển thị."
+  }
+]

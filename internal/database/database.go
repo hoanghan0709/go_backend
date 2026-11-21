@@ -25,6 +25,7 @@ func InitDB(filepath string) (*gorm.DB, error) {
 		return nil, err
 	}
 	if err := autoMigrate(db); err != nil {
+		_ = sqlDB.Close()
 		return nil, err
 	}
 

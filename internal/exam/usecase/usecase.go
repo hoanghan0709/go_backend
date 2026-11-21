@@ -7,6 +7,7 @@ import (
 	"github.com/han/go-ecommerce/internal/exam/dto"
 	"time"
 
+	category "github.com/han/go-ecommerce/internal/category/model"
 	"github.com/han/go-ecommerce/internal/common/enums"
 	exam "github.com/han/go-ecommerce/internal/exam/model"
 	"github.com/han/go-ecommerce/internal/exam/repository"
@@ -64,7 +65,7 @@ func view(tx *gorm.DB, s *exam.ExamSession, now time.Time) (*View, error) {
 			q.IsCorrect = &correct
 		}
 	}
-	return &View{ID: s.ID, TestID: s.TestID, Status: s.Status, StartedAt: s.StartedAt, ExpiresAt: s.ExpiresAt, FinishedAt: s.FinishedAt, ServerTime: now, CorrectAnswer: s.CorrectAnswer, TotalQuestions: len(snap.Questions), Score: s.Score, PassingScore: s.PassingScore, IsPassed: s.IsPassed, FailureReason: s.FailureReason, Exam: snap}, nil
+	return &View{ID: s.ID, TestID: s.TestID, TemplateID: s.TemplateID, Status: s.Status, StartedAt: s.StartedAt, ExpiresAt: s.ExpiresAt, FinishedAt: s.FinishedAt, ServerTime: now, CorrectAnswer: s.CorrectAnswer, TotalQuestions: len(snap.Questions), Score: s.Score, PassingScore: s.PassingScore, IsPassed: s.IsPassed, FailureReason: s.FailureReason, Exam: snap}, nil
 }
 func (u *Usecase) Start(user, tid uint) (out *View, err error) {
 	err = u.repo.Transaction(func(tx *gorm.DB) error {
@@ -85,7 +86,7 @@ func (u *Usecase) Start(user, tid uint) (out *View, err error) {
 			return learning.Invalid(fmt.Sprintf("test_id %d: passing_score must be between 1 and %d", tid, len(t.Questions)))
 		}
 
-		snap := exam.Snapshot{Name: t.Name, LicenseType: t.LicenseType, Version: t.Version}
+		snap := exam.Snapshot{CategoryType: t.CategoryType, Name: t.Name, LicenseType: t.LicenseType, Version: t.Version}
 		seen := map[uint]bool{}
 		for _, tq := range t.Questions {
 			q := tq.Question
@@ -94,6 +95,15 @@ func (u *Usecase) Start(user, tid uint) (out *View, err error) {
 			}
 			if seen[q.ID] {
 				return learning.Invalid(fmt.Sprintf("test_id %d: question %d is duplicated", tid, q.ID))
+			}
+			if t.CategoryType != "" {
+				var cat category.Category
+				if e := tx.First(&cat, q.CategoryID).Error; e != nil {
+					return e
+				}
+				if cat.Type != t.CategoryType {
+					return learning.Invalid("question category type no longer matches test")
+				}
 			}
 			if !q.Published {
 				return learning.Invalid(fmt.Sprintf("test_id %d: question %d is unpublished", tid, q.ID))
@@ -106,7 +116,7 @@ func (u *Usecase) Start(user, tid uint) (out *View, err error) {
 			if e := validation.Answers(q.Answers); e != nil {
 				return learning.Invalid(fmt.Sprintf("test_id %d: question %d: %s", tid, q.ID, e))
 			}
-			sq := exam.SnapshotQuestion{ID: q.ID, Title: q.Title, Content: q.Content, Image: q.Image, CategoryID: q.CategoryID, IsCritical: q.IsCritical, Explanation: q.Explanation}
+			sq := exam.SnapshotQuestion{RoadSignID: q.RoadSignID, ID: q.ID, Title: q.Title, Content: q.Content, Image: q.Image, CategoryID: q.CategoryID, IsCritical: q.IsCritical, Explanation: q.Explanation}
 			for _, a := range q.Answers {
 				correct := a.IsCorrect
 				sq.Answers = append(sq.Answers, exam.SnapshotAnswer{ID: a.ID, Content: a.Content, Label: a.Label, Order: a.Order, IsCorrect: &correct})
@@ -118,7 +128,7 @@ func (u *Usecase) Start(user, tid uint) (out *View, err error) {
 			return e
 		}
 		now := u.Now()
-		s := exam.ExamSession{UserID: user, TestID: tid, Snapshot: string(encoded), StartedAt: now, ExpiresAt: now.Add(time.Duration(t.Duration) * time.Minute), PassingScore: t.PassingScore, CriticalFail: t.CriticalFail, Status: enums.ExamDoing}
+		s := exam.ExamSession{UserID: user, TestID: &tid, Snapshot: string(encoded), StartedAt: now, ExpiresAt: now.Add(time.Duration(t.Duration) * time.Minute), PassingScore: t.PassingScore, CriticalFail: t.CriticalFail, Status: enums.ExamDoing}
 		if e = tx.Omit("User", "Test", "UserAnswers").Create(&s).Error; e != nil {
 			return e
 		}
@@ -300,4 +310,13 @@ func (u *Usecase) History(user uint, page, limit int) ([]exam.ExamSession, int64
 	}
 	page, limit = (learning.Filter{Page: page, Limit: limit}).Bounds()
 	return u.repo.History(user, page, limit)
+}
+
+// History keeps legacy all-license behavior. Mobile can filter explicitly; this
+// avoids hiding an in-progress exam when the user's preferred license changes.
+func (u *Usecase) HistoryFiltered(user uint, f learning.Filter) ([]exam.ExamSession, int64, error) {
+	if err := u.ExpireUser(user); err != nil {
+		return nil, 0, err
+	}
+	return u.repo.HistoryFiltered(user, f)
 }

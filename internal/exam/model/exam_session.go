@@ -15,8 +15,10 @@ type ExamSession struct {
 	UserID uint `gorm:"index:idx_exam_user_status_expiry"`
 	User   auth.User
 	// Đề thi
-	TestID uint
+	TestID *uint
 	Test   test.Test
+	// Random sessions have no shared Test row; the source template ID is metadata.
+	TemplateID uint `json:"template_id,omitempty"`
 	// Số câu đúng
 	Snapshot      string    `gorm:"type:text" json:"-"`
 	ExpiresAt     time.Time `gorm:"index:idx_exam_user_status_expiry"`

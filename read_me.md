@@ -4,6 +4,10 @@ Go + Gin + GORM + SQLite. Backend có quản trị ngân hàng câu hỏi, đề
 
 - [Hướng dẫn API từng bước cho người mới, có ví dụ xuyên suốt](docs/HUONG_DAN_API_TUNG_BUOC.md)
 - [API cào dữ liệu không tham số: nguồn, cách gọi và chống trùng](docs/CRAWL_DU_LIEU.md)
+- [Trang quản trị local: chạy và sử dụng](docs/ADMIN_LOCAL.md)
+- [Luồng learner sau đăng nhập và phạm vi dữ liệu](docs/LUONG_LEARNER.md)
+- [API mobile: lưu hạng, random, tab chủ đề và học biển báo](docs/MOBILE_API.md)
+- [Chức năng hiện có và REST API kèm chú thích](docs/CHUC_NANG_VA_REST_API.md)
 - [Theo dõi công việc và quyết định thiết kế](work_follow.md)
 - [Danh sách API, request mẫu và quy tắc nghiệp vụ](docs/API.md)
 - [Luồng HTTP mẫu để thử bằng REST Client](docs/example.http)
@@ -89,4 +93,14 @@ Comment trong code tập trung vào **vì sao** dùng snapshot, transaction, ki�
 
 SQLite dùng một connection để tuần tự hóa transaction ghi, cùng `foreign_keys=ON` và `busy_timeout`. Cách này phù hợp backend quy mô nhỏ; khi cần nhiều server hoặc tải ghi lớn, cần chuyển DB và thiết kế khóa hàng/optimistic locking trước khi tăng connection pool.
 
-Bài hết giờ được chấm khi truy cập phiên thi/lịch sử/thống kê; không cần client giữ kết nối. Chưa có worker tự cập nhật hàng loạt khi không có request. Thống kê hiện tổng hợp từ lịch sử đầy đủ của người dùng; với dữ liệu lớn nên bổ sung bảng tổng hợp. Repository này chưa có giao diện người học/quản trị, gửi email hoặc lưu trữ file ảnh. Crawler có thể nhập bộ câu hỏi từ nguồn bên thứ ba vào bản nháp để rà soát; không tự xác nhận đây là dữ liệu chính thức mới nhất. Trường `image` nhận đường dẫn từ admin hoặc nguồn crawler.
+Bài hết giờ được chấm khi truy cập phiên thi/lịch sử/thống kê; không cần client giữ kết nối. Chưa có worker tự cập nhật hàng loạt khi không có request. Thống kê hiện tổng hợp từ lịch sử đầy đủ của người dùng; với dữ liệu lớn nên bổ sung bảng tổng hợp. Repository này đã có [giao diện quản trị local](docs/ADMIN_LOCAL.md) tại `/admin/`; chưa có giao diện người học, gửi email hoặc lưu trữ file ảnh. Crawler có thể nhập bộ câu hỏi từ nguồn bên thứ ba vào bản nháp để rà soát; không tự xác nhận đây là dữ liệu chính thức mới nhất. Trường `image` nhận đường dẫn từ admin hoặc nguồn crawler.
+
+
+## Mobile: hạng đang học, random và biển báo
+
+- `PUT /api/v1/me/license` lưu hạng mặc định; profile/login trả `current_license_type`.
+- `POST /api/v1/exams/random` tạo phiên riêng từ cấu hình admin; dùng lại API lưu/nộp/lịch sử. `test_id` có thể null với bài random.
+- Chủ đề có `type`; câu hỏi lọc theo loại/chủ đề/biển báo/hạng. Chủ đề cũ mặc định UNCATEGORIZED, cần admin phân loại.
+- Web local có màn hình **Học biển báo** và **Cấu hình đề random**, cùng liên kết câu hỏi–biển báo.
+- Sao lưu DB trước nâng cấp. Migration SQLite chạy transaction, kiểm tra FK rồi khôi phục enforcement. Không tự tạo cấu hình thi chính thức hoặc xuất bản dữ liệu cũ.
+- Xem `docs/MOBILE_API.md` để chuẩn bị nội dung và tích hợp mobile.

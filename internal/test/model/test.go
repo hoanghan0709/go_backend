@@ -4,6 +4,7 @@ import common "github.com/han/go-ecommerce/internal/common/model"
 
 type Test struct {
 	common.BaseModel
+	CategoryType string `json:"category_type" gorm:"index"`
 
 	// Ví dụ: "Đề số 1"
 	LicenseType  string `gorm:"index" json:"license_type"`

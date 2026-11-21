@@ -27,6 +27,7 @@ type Service struct{ DB *gorm.DB }
 func New(db *gorm.DB) *Service { return &Service{DB: db} }
 
 type QuestionInput struct {
+	RoadSignID  *uint             `json:"road_sign_id,omitempty"`
 	Title       string            `json:"title" binding:"required"`
 	Content     string            `json:"content" binding:"required"`
 	Image       string            `json:"image"`
@@ -44,15 +45,19 @@ type AnswerInput struct {
 	IsCorrect bool   `json:"is_correct"`
 }
 
+// LicenseTypes is the catalog supported by the application's question bank.
+func LicenseTypes() []string { return []string{"A1", "A", "B", "C1", "C", "D"} }
+
 func ValidLicense(l string) bool {
-	switch l {
-	case "A1", "A", "B", "C1", "C", "D":
-		return true
+	for _, code := range LicenseTypes() {
+		if code == l {
+			return true
+		}
 	}
 	return false
 }
 func questionFrom(in QuestionInput) (question.Question, error) {
-	q := question.Question{Title: strings.TrimSpace(in.Title), Content: strings.TrimSpace(in.Content), Image: strings.TrimSpace(in.Image), Explanation: strings.TrimSpace(in.Explanation), LicenseType: in.LicenseType, CategoryID: in.CategoryID, IsCritical: in.IsCritical, Published: in.Published}
+	q := question.Question{RoadSignID: in.RoadSignID, Title: strings.TrimSpace(in.Title), Content: strings.TrimSpace(in.Content), Image: strings.TrimSpace(in.Image), Explanation: strings.TrimSpace(in.Explanation), LicenseType: in.LicenseType, CategoryID: in.CategoryID, IsCritical: in.IsCritical, Published: in.Published}
 	if q.Title == "" {
 		return q, Invalid("title must not be blank")
 	}
@@ -88,6 +93,9 @@ func saveQuestion(tx *gorm.DB, id uint, in QuestionInput) (*question.Question, e
 		}
 		return nil, err
 	}
+	if err = validateQuestionSign(tx, q); err != nil {
+		return nil, err
+	}
 	if id != 0 {
 		var old question.Question
 		if err = tx.First(&old, id).Error; err != nil {
@@ -111,9 +119,9 @@ func saveQuestion(tx *gorm.DB, id uint, in QuestionInput) (*question.Question, e
 	answers := q.Answers
 	q.Answers = nil
 	if id == 0 {
-		err = tx.Omit("Category", "Answers").Create(&q).Error
+		err = tx.Omit("Category", "Answers", "RoadSign").Create(&q).Error
 	} else {
-		err = tx.Omit("Category", "Answers").Save(&q).Error
+		err = tx.Omit("Category", "Answers", "RoadSign").Save(&q).Error
 		// Xóa mềm đáp án cũ để các quan hệ lịch sử vẫn tồn tại. Nhãn/thứ tự được
 		// chuyển sang namespace lưu trữ trước khi thay cả tập đáp án trong transaction.
 		if err == nil {
@@ -177,12 +185,17 @@ func (s *Service) DeleteQuestion(id uint) error {
 }
 
 type Filter struct {
-	Page       int
-	Limit      int
-	License    string
-	CategoryID uint
-	Critical   *bool
-	Search     string
+	Status       string
+	CategoryType string
+	SignType     string
+	RoadSignID   uint
+	Published    *bool
+	Page         int
+	Limit        int
+	License      string
+	CategoryID   uint
+	Critical     *bool
+	Search       string
 }
 
 func (f Filter) Bounds() (int, int) {
@@ -199,6 +212,18 @@ func (f Filter) Bounds() (int, int) {
 	return p, l
 }
 func filterQuestions(db *gorm.DB, f Filter) *gorm.DB {
+	if f.SignType != "" {
+		db = db.Where("road_sign_id IN (?)", db.Session(&gorm.Session{NewDB: true}).Table("road_signs").Select("id").Where("sign_type = ? AND deleted_at IS NULL", f.SignType))
+	}
+	if f.CategoryType != "" {
+		db = db.Where("category_id IN (?)", db.Session(&gorm.Session{NewDB: true}).Model(&category.Category{}).Select("id").Where("type = ?", f.CategoryType))
+	}
+	if f.RoadSignID != 0 {
+		db = db.Where("road_sign_id = ?", f.RoadSignID)
+	}
+	if f.Published != nil {
+		db = db.Where("published = ?", *f.Published)
+	}
 	if f.License != "" {
 		db = db.Where("license_type = ?", f.License)
 	}
@@ -229,23 +254,45 @@ func (s *Service) Questions(f Filter, admin bool) ([]question.Question, int64, e
 }
 
 type CategoryInput struct {
+	Type        string `json:"type"`
 	Name        string `json:"name" binding:"required"`
 	Description string `json:"description"`
 }
 
-func (s *Service) SaveCategory(id uint, in CategoryInput) (*category.Category, error) {
+func (s *Service) SaveCategory(id uint, in CategoryInput) (out *category.Category, err error) {
+	err = s.DB.Transaction(func(tx *gorm.DB) error { var e error; out, e = saveCategory(tx, id, in); return e })
+	return
+}
+func saveCategory(tx *gorm.DB, id uint, in CategoryInput) (*category.Category, error) {
 	c := category.Category{Name: strings.TrimSpace(in.Name), Description: strings.TrimSpace(in.Description)}
 	if c.Name == "" {
 		return nil, Invalid("name is required")
 	}
 	if id != 0 {
-		if err := s.DB.First(&c, id).Error; err != nil {
+		if err := tx.First(&c, id).Error; err != nil {
 			return nil, err
 		}
 		c.Name = strings.TrimSpace(in.Name)
 		c.Description = strings.TrimSpace(in.Description)
 	}
-	err := s.DB.Save(&c).Error
+	if in.Type != "" {
+		c.Type = cleanType(in.Type)
+	} else if id == 0 {
+		c.Type = "UNCATEGORIZED"
+	}
+	if !ValidCategoryType(c.Type) {
+		return nil, Invalid("invalid category type")
+	}
+	if id != 0 && c.Type != "SIGN" {
+		var n int64
+		if err := tx.Table("road_signs").Where("category_id = ? AND deleted_at IS NULL", id).Count(&n).Error; err != nil {
+			return nil, err
+		}
+		if n > 0 {
+			return nil, Invalid("category contains road signs and must keep type SIGN")
+		}
+	}
+	err := tx.Save(&c).Error
 	return &c, err
 }
 func (s *Service) DeleteCategory(id uint) error {
@@ -256,6 +303,12 @@ func (s *Service) DeleteCategory(id uint) error {
 		}
 		if n > 0 {
 			return Invalid("category still contains questions")
+		}
+		if err := tx.Table("road_signs").Where("category_id = ? AND deleted_at IS NULL", id).Count(&n).Error; err != nil {
+			return err
+		}
+		if n > 0 {
+			return Invalid("category still contains road signs")
 		}
 		r := tx.Delete(&category.Category{}, id)
 		if r.Error != nil {
@@ -269,6 +322,7 @@ func (s *Service) DeleteCategory(id uint) error {
 }
 
 type TestInput struct {
+	CategoryType string `json:"category_type"`
 	Name         string `json:"name" binding:"required"`
 	Description  string `json:"description"`
 	LicenseType  string `json:"license_type" binding:"required"`
@@ -302,6 +356,15 @@ func saveTest(tx *gorm.DB, id uint, in TestInput) (*test.Test, error) {
 			}
 			return nil, err
 		}
+		if in.CategoryType != "" {
+			var cat category.Category
+			if err := tx.First(&cat, q.CategoryID).Error; err != nil {
+				return nil, err
+			}
+			if cat.Type != in.CategoryType {
+				return nil, Invalid("question category type does not match test")
+			}
+		}
 		if !q.Published {
 			return nil, Invalid(fmt.Sprintf("question_ids[%d]: question %d is unpublished; set published=true before adding it to a test", i, qid))
 		}
@@ -312,7 +375,7 @@ func saveTest(tx *gorm.DB, id uint, in TestInput) (*test.Test, error) {
 			return nil, Invalid(fmt.Sprintf("question_ids[%d]: question %d: %s", i, qid, err))
 		}
 	}
-	t := test.Test{Name: strings.TrimSpace(in.Name), Description: in.Description, LicenseType: in.LicenseType, Version: strings.TrimSpace(in.Version), Duration: in.Duration, TotalQuestion: n, PassingScore: in.PassingScore, CriticalFail: in.CriticalFail, Published: in.Published}
+	t := test.Test{CategoryType: in.CategoryType, Name: strings.TrimSpace(in.Name), Description: in.Description, LicenseType: in.LicenseType, Version: strings.TrimSpace(in.Version), Duration: in.Duration, TotalQuestion: n, PassingScore: in.PassingScore, CriticalFail: in.CriticalFail, Published: in.Published}
 	if id != 0 {
 		var old test.Test
 		if err := tx.First(&old, id).Error; err != nil {
@@ -365,47 +428,11 @@ func (s *Service) GenerateTest(in GenerateInput) (out *test.Test, err error) {
 	// Chọn câu điểm liệt và câu thường riêng theo từng chủ đề, tránh chọn ngẫu nhiên
 	// rồi vô tình thiếu/thừa số câu điểm liệt so với cấu hình của người quản trị.
 	err = s.DB.Transaction(func(tx *gorm.DB) error {
-		in.QuestionIDs = nil
-		seen := map[uint]bool{}
-		for i, quota := range in.Quotas {
-			if quota.CategoryID == 0 {
-				return Invalid(fmt.Sprintf("quotas[%d].category_id must be a positive integer", i))
-			}
-			if seen[quota.CategoryID] {
-				return Invalid(fmt.Sprintf("quotas[%d].category_id: category %d is duplicated", i, quota.CategoryID))
-			}
-			if quota.CriticalCount < 0 || quota.CriticalCount > quota.Count {
-				return Invalid(fmt.Sprintf("quotas[%d].critical_count must be between 0 and %d; received %d", i, quota.Count, quota.CriticalCount))
-			}
-			var cat category.Category
-			if e := tx.First(&cat, quota.CategoryID).Error; e != nil {
-				if errors.Is(e, gorm.ErrRecordNotFound) {
-					return Invalid(fmt.Sprintf("quotas[%d].category_id: category %d does not exist or was deleted", i, quota.CategoryID))
-				}
-				return e
-			}
-
-			seen[quota.CategoryID] = true
-			for _, critical := range []bool{true, false} {
-				count := quota.Count - quota.CriticalCount
-				if critical {
-					count = quota.CriticalCount
-				}
-				if count == 0 {
-					continue
-				}
-				var ids []uint
-				if err := tx.Model(&question.Question{}).Where("published = ? AND license_type = ? AND category_id = ? AND is_critical = ?", true, in.LicenseType, quota.CategoryID, critical).Pluck("id", &ids).Error; err != nil {
-					return err
-				}
-				if len(ids) < count {
-					return Invalid(fmt.Sprintf("quotas[%d]: category %d needs %d published %s questions (critical=%t), but only %d are available", i, quota.CategoryID, count, in.LicenseType, critical, len(ids)))
-				}
-				rand.Shuffle(len(ids), func(i, j int) { ids[i], ids[j] = ids[j], ids[i] })
-				in.QuestionIDs = append(in.QuestionIDs, ids[:count]...)
-			}
+		ids, err := SelectQuestionIDs(tx, in)
+		if err != nil {
+			return err
 		}
-		rand.Shuffle(len(in.QuestionIDs), func(i, j int) { in.QuestionIDs[i], in.QuestionIDs[j] = in.QuestionIDs[j], in.QuestionIDs[i] })
+		in.QuestionIDs = ids
 		var e error
 		out, e = saveTest(tx, 0, in.TestInput)
 		return e
@@ -451,6 +478,9 @@ func (s *Service) Practice(user, qid, aid uint) (*PracticeAttempt, *question.Que
 // Validate business rules separately from HTTP tags: imports and direct service
 // callers must receive the same checks, and generation validates before querying.
 func validateTestConfig(in TestInput, n int) error {
+	if in.CategoryType != "" && !ValidCategoryType(in.CategoryType) {
+		return Invalid("invalid category_type")
+	}
 	if strings.TrimSpace(in.Name) == "" {
 		return Invalid("name must not be blank")
 	}
@@ -470,4 +500,71 @@ func validateTestConfig(in TestInput, n int) error {
 		return Invalid(fmt.Sprintf("passing_score must be between 1 and %d (number of questions); received %d", n, in.PassingScore))
 	}
 	return nil
+}
+
+// SelectQuestionIDs is shared by admin generation and private learner sessions.
+// Quotas are server-owned for learner requests; shortage never changes the rules.
+func SelectQuestionIDs(tx *gorm.DB, in GenerateInput) ([]uint, error) {
+	total := 0
+	if len(in.Quotas) == 0 {
+		return nil, Invalid("quotas are required")
+	}
+	for _, q := range in.Quotas {
+		if q.Count < 1 || q.Count > 200 {
+			return nil, Invalid("quota count must be 1..200")
+		}
+		total += q.Count
+	}
+	if err := validateTestConfig(in.TestInput, total); err != nil {
+		return nil, err
+	}
+	err := func() error {
+		in.QuestionIDs = nil
+		seen := map[uint]bool{}
+		for i, quota := range in.Quotas {
+			if quota.CategoryID == 0 {
+				return Invalid(fmt.Sprintf("quotas[%d].category_id must be a positive integer", i))
+			}
+			if seen[quota.CategoryID] {
+				return Invalid(fmt.Sprintf("quotas[%d].category_id: category %d is duplicated", i, quota.CategoryID))
+			}
+			if quota.CriticalCount < 0 || quota.CriticalCount > quota.Count {
+				return Invalid(fmt.Sprintf("quotas[%d].critical_count must be between 0 and %d; received %d", i, quota.Count, quota.CriticalCount))
+			}
+			var cat category.Category
+			if e := tx.First(&cat, quota.CategoryID).Error; e != nil {
+				if errors.Is(e, gorm.ErrRecordNotFound) {
+					return Invalid(fmt.Sprintf("quotas[%d].category_id: category %d does not exist or was deleted", i, quota.CategoryID))
+				}
+				return e
+			}
+
+			if in.CategoryType != "" && cat.Type != in.CategoryType {
+				return Invalid(fmt.Sprintf("quotas[%d]: category type must be %s", i, in.CategoryType))
+			}
+			seen[quota.CategoryID] = true
+			for _, critical := range []bool{true, false} {
+				count := quota.Count - quota.CriticalCount
+				if critical {
+					count = quota.CriticalCount
+				}
+				if count == 0 {
+					continue
+				}
+				var ids []uint
+				if err := tx.Model(&question.Question{}).Where("published = ? AND license_type = ? AND category_id = ? AND is_critical = ?", true, in.LicenseType, quota.CategoryID, critical).Pluck("id", &ids).Error; err != nil {
+					return err
+				}
+				if len(ids) < count {
+					return Invalid(fmt.Sprintf("quotas[%d]: category %d needs %d published %s questions (critical=%t), but only %d are available", i, quota.CategoryID, count, in.LicenseType, critical, len(ids)))
+				}
+				rand.Shuffle(len(ids), func(i, j int) { ids[i], ids[j] = ids[j], ids[i] })
+				in.QuestionIDs = append(in.QuestionIDs, ids[:count]...)
+			}
+		}
+		rand.Shuffle(len(in.QuestionIDs), func(i, j int) { in.QuestionIDs[i], in.QuestionIDs[j] = in.QuestionIDs[j], in.QuestionIDs[i] })
+
+		return nil
+	}()
+	return in.QuestionIDs, err
 }

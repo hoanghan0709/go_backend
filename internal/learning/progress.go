@@ -2,9 +2,11 @@ package learning
 
 import (
 	"encoding/json"
-	"gorm.io/gorm"
 	"sort"
 	"time"
+
+	category "github.com/han/go-ecommerce/internal/category/model"
+	"gorm.io/gorm"
 
 	"github.com/han/go-ecommerce/internal/common/enums"
 	exam "github.com/han/go-ecommerce/internal/exam/model"
@@ -25,22 +27,39 @@ type ExamTrend struct {
 	Passed     bool       `json:"passed"`
 }
 type Progress struct {
-	CompletedExams      int                `json:"completed_exams"`
-	PassedExams         int                `json:"passed_exams"`
-	PassRate            float64            `json:"pass_rate"`
-	Categories          []CategoryProgress `json:"categories"`
-	RecentExams         []ExamTrend        `json:"recent_exams"`
-	SuggestedCategoryID uint               `json:"suggested_category_id,omitempty"`
-	WrongQuestionIDs    []uint             `json:"wrong_question_ids"`
+	LicenseType          string             `json:"license_type"`
+	TotalQuestions       int                `json:"total_questions"`
+	AttemptedQuestions   int                `json:"attempted_questions"`
+	MasteredQuestions    int                `json:"mastered_questions"`
+	WrongQuestions       int                `json:"wrong_questions"`
+	UnattemptedQuestions int                `json:"unattempted_questions"`
+	CompletionPercentage float64            `json:"completion_percentage"`
+	CompletedExams       int                `json:"completed_exams"`
+	PassedExams          int                `json:"passed_exams"`
+	PassRate             float64            `json:"pass_rate"`
+	Categories           []CategoryProgress `json:"categories"`
+	RecentExams          []ExamTrend        `json:"recent_exams"`
+	SuggestedCategoryID  uint               `json:"suggested_category_id,omitempty"`
+	WrongQuestionIDs     []uint             `json:"wrong_question_ids"`
 }
 type event struct {
 	qid, category uint
 	correct       bool
 	at            time.Time
+	source, id    uint
+}
+
+// Equal timestamps prefer exam results, then the larger ID within a source.
+func (e event) newerThan(other event) bool {
+	return e.at.After(other.at) || (e.at.Equal(other.at) && (e.source > other.source || (e.source == other.source && e.id > other.id)))
 }
 
 func (s *Service) Progress(user uint, license string) (*Progress, error) {
-	out := &Progress{Categories: []CategoryProgress{}, RecentExams: []ExamTrend{}, WrongQuestionIDs: []uint{}}
+	return s.ProgressFiltered(user, Filter{License: license})
+}
+func (s *Service) ProgressFiltered(user uint, f Filter) (*Progress, error) {
+	license := f.License
+	out := &Progress{LicenseType: license, Categories: []CategoryProgress{}, RecentExams: []ExamTrend{}, WrongQuestionIDs: []uint{}}
 	var practice []PracticeAttempt
 	db := s.DB.Where("user_id = ?", user)
 	if license != "" {
@@ -50,8 +69,30 @@ func (s *Service) Progress(user uint, license string) (*Progress, error) {
 		return nil, err
 	}
 	events := []event{}
+	allEvents := []event{}
+	var categoryIDs []uint
+	if f.CategoryType != "" {
+		if err := s.DB.Model(&category.Category{}).Where("type = ?", f.CategoryType).Pluck("id", &categoryIDs).Error; err != nil {
+			return nil, err
+		}
+	}
+	matchesCategory := func(id uint) bool {
+		if f.CategoryType == "" {
+			return true
+		}
+		for _, candidate := range categoryIDs {
+			if candidate == id {
+				return true
+			}
+		}
+		return false
+	}
 	for _, p := range practice {
-		events = append(events, event{p.QuestionID, p.CategoryID, p.IsCorrect, p.CreatedAt})
+		e := event{p.QuestionID, p.CategoryID, p.IsCorrect, p.CreatedAt, 0, p.ID}
+		allEvents = append(allEvents, e)
+		if matchesCategory(p.CategoryID) {
+			events = append(events, e)
+		}
 	}
 	var sessions []exam.ExamSession
 	if err := s.DB.Where("user_id = ? AND status IN ?", user, []enums.ExamStatus{enums.ExamCompleted, enums.ExamTimeout}).Order("finished_at DESC, id DESC").Find(&sessions).Error; err != nil {
@@ -65,12 +106,15 @@ func (s *Service) Progress(user uint, license string) (*Progress, error) {
 		if license != "" && snap.LicenseType != license {
 			continue
 		}
-		out.CompletedExams++
-		if session.IsPassed {
-			out.PassedExams++
-		}
-		if len(out.RecentExams) < 20 {
-			out.RecentExams = append(out.RecentExams, ExamTrend{session.ID, session.FinishedAt, session.Score, len(snap.Questions), session.IsPassed})
+		matchesExam := f.CategoryType == "" || snap.CategoryType == f.CategoryType
+		if matchesExam {
+			out.CompletedExams++
+			if session.IsPassed {
+				out.PassedExams++
+			}
+			if len(out.RecentExams) < 20 {
+				out.RecentExams = append(out.RecentExams, ExamTrend{session.ID, session.FinishedAt, session.Score, len(snap.Questions), session.IsPassed})
+			}
 		}
 		var answers []exam.UserAnswer
 		if err := s.DB.Where("exam_session_id = ?", session.ID).Find(&answers).Error; err != nil {
@@ -85,7 +129,11 @@ func (s *Service) Progress(user uint, license string) (*Progress, error) {
 			at = *session.FinishedAt
 		}
 		for _, q := range snap.Questions {
-			events = append(events, event{q.ID, q.CategoryID, correct[q.ID], at})
+			e := event{q.ID, q.CategoryID, correct[q.ID], at, 1, session.ID}
+			allEvents = append(allEvents, e)
+			if matchesExam {
+				events = append(events, e)
+			}
 		}
 	}
 	categories := map[uint]*CategoryProgress{}
@@ -101,7 +149,7 @@ func (s *Service) Progress(user uint, license string) (*Progress, error) {
 			c.Correct++
 		}
 		previous, ok := latest[e.qid]
-		if !ok || e.at.After(previous.at) {
+		if !ok || e.newerThan(previous) {
 			latest[e.qid] = e
 		}
 	}
@@ -126,6 +174,37 @@ func (s *Service) Progress(user uint, license string) (*Progress, error) {
 	sort.Slice(out.WrongQuestionIDs, func(i, j int) bool { return out.WrongQuestionIDs[i] < out.WrongQuestionIDs[j] })
 	if out.CompletedExams > 0 {
 		out.PassRate = 100 * float64(out.PassedExams) / float64(out.CompletedExams)
+	}
+	// Count distinct questions against the current published bank, regardless of
+	// the exam mode in which the learner encountered each question.
+	var questionIDs []uint
+	bankFilter := f
+	published := true
+	bankFilter.Published = &published
+	if err := filterQuestions(s.DB.Model(&question.Question{}), bankFilter).Pluck("id", &questionIDs).Error; err != nil {
+		return nil, err
+	}
+	latestAll := map[uint]event{}
+	for _, e := range allEvents {
+		previous, ok := latestAll[e.qid]
+		if !ok || e.newerThan(previous) {
+			latestAll[e.qid] = e
+		}
+	}
+	out.TotalQuestions = len(questionIDs)
+	for _, id := range questionIDs {
+		if e, ok := latestAll[id]; ok {
+			out.AttemptedQuestions++
+			if e.correct {
+				out.MasteredQuestions++
+			} else {
+				out.WrongQuestions++
+			}
+		}
+	}
+	out.UnattemptedQuestions = out.TotalQuestions - out.AttemptedQuestions
+	if out.TotalQuestions > 0 {
+		out.CompletionPercentage = 100 * float64(out.MasteredQuestions) / float64(out.TotalQuestions)
 	}
 	return out, nil
 }

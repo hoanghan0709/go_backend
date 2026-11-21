@@ -5,16 +5,19 @@ import (
 	category "github.com/han/go-ecommerce/internal/category/model"
 	"github.com/han/go-ecommerce/internal/common/enums"
 	common "github.com/han/go-ecommerce/internal/common/model"
+	roadsign "github.com/han/go-ecommerce/internal/roadsign/model"
 )
 
 type Question struct {
 	common.BaseModel
-	Title       string `gorm:"size:255" json:"title"`
-	Content     string `gorm:"type:text" json:"content"`
-	Image       string `json:"image"`
-	Explanation string `gorm:"type:text" json:"explanation"`
-	SourceURL   string `json:"source_url,omitempty"`
-	Published   bool   `gorm:"not null;default:false" json:"published"`
+	RoadSignID  *uint              `json:"road_sign_id,omitempty" gorm:"index"`
+	RoadSign    *roadsign.RoadSign `json:"road_sign,omitempty"`
+	Title       string             `gorm:"size:255" json:"title"`
+	Content     string             `gorm:"type:text" json:"content"`
+	Image       string             `json:"image"`
+	Explanation string             `gorm:"type:text" json:"explanation"`
+	SourceURL   string             `json:"source_url,omitempty"`
+	Published   bool               `gorm:"not null;default:false" json:"published"`
 
 	IsCritical  bool              `json:"is_critical"`
 	Position    int               `gorm:"not null;uniqueIndex:idx_questions_category_position" json:"position"`
