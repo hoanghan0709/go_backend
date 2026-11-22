@@ -1,17 +1,18 @@
 package exam
 
 import (
+	"github.com/han/go-ecommerce/internal/answer/model"
 	common "github.com/han/go-ecommerce/internal/common/model"
-	"github.com/han/go-ecommerce/internal/question/model"
+	modelQuestion "github.com/han/go-ecommerce/internal/question/model"
 )
 
 type UserAnswer struct {
 	common.BaseModel
 
-	ExamSessionID uint
+	ExamSessionID uint `gorm:"uniqueIndex:idx_session_question"`
 
-	QuestionID uint
-	Question   model.Question
+	QuestionID uint `gorm:"uniqueIndex:idx_session_question"`
+	Question   modelQuestion.Question
 
 	AnswerID uint
 	Answer   model.Answer

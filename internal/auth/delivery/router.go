@@ -5,18 +5,22 @@ import (
 )
 
 func RegisterRoutes(
-
 	r *gin.Engine,
-
 	handler *Handler,
+	authMiddleware gin.HandlerFunc,
 ) {
 
 	auth := r.Group("/auth")
+	{
+		auth.POST("/register", handler.Register)
+		auth.POST("/login", handler.Login)
+		auth.POST("/refresh", handler.Refresh)
+	}
 
-	auth.POST(
-		"/register",
-		handler.Register,
-	)
-	auth.GET("/getProfile/:id",
-		handler.GetUser)
+	protected := auth.Group("")
+	protected.Use(authMiddleware)
+	{
+		protected.GET("/getProfile", handler.GetUser) //:id
+	}
+
 }

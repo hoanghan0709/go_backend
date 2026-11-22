@@ -1,8 +1,12 @@
 package repository
 
 import (
+	category "github.com/han/go-ecommerce/internal/category/model"
+	"github.com/han/go-ecommerce/internal/learning"
 	"github.com/han/go-ecommerce/internal/question/model"
+	"github.com/han/go-ecommerce/internal/question/validation"
 	"gorm.io/gorm"
+	"strings"
 )
 
 type Repository struct {
@@ -30,9 +34,8 @@ func (r *Repository) FindByID(id uint) (*model.Question, error) {
 
 	return &question, nil
 }
-func (r *Repository) FindAll() ([]model.Question, error) {
+func (r *Repository) GetListQuestion() ([]model.Question, error) {
 	var questions []model.Question
-
 	err := r.db.
 		Preload("Category").
 		Preload("Answers").
@@ -45,6 +48,39 @@ func (r *Repository) FindAll() ([]model.Question, error) {
 
 	return questions, nil
 }
+func (r *Repository) CreateQuestion(question *model.Question) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		if !learning.ValidLicense(string(question.LicenseType)) {
+			return learning.Invalid("invalid license_type")
+		}
+		if strings.TrimSpace(question.Title) == "" {
+			return learning.Invalid("title must not be blank")
+		}
+		if strings.TrimSpace(question.Content) == "" {
+			return learning.Invalid("content must not be blank")
+		}
+		if err := validation.Answers(question.Answers); err != nil {
+			return learning.Invalid(err.Error())
+		}
+		var categoryRecord category.Category
+		if err := tx.First(&categoryRecord, question.CategoryID).Error; err != nil {
+			return err
+		}
+		var maxPosition int
+
+		err := tx.Unscoped().Model(&model.Question{}).
+			Where("category_id = ?", question.CategoryID).
+			Select("COALESCE(MAX(position), 0)").
+			Scan(&maxPosition).Error
+		if err != nil {
+			return err
+		}
+
+		question.Position = maxPosition + 1
+		return tx.Create(question).Error
+	})
+}
+
 func (r *Repository) Update(question *model.Question) error {
 	return r.db.Save(question).Error
 }

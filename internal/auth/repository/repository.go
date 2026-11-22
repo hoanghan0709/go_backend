@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"github.com/han/go-ecommerce/internal/auth/dto"
 	auth "github.com/han/go-ecommerce/internal/auth/model"
 	"gorm.io/gorm"
 )
@@ -28,6 +29,15 @@ func (r *Repository) FindByEmail(email string) (*auth.User, error) {
 func (r *Repository) GetUser(id string) (*auth.User, error) {
 	var user auth.User
 	err := r.db.Where("id = ?", id).First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+func (r *Repository) Login(dto dto.LoginRequest) (*auth.User, error) {
+	var user auth.User
+	err := r.db.Where("email = ?", dto.Email).First(&user).Error
 	if err != nil {
 		return nil, err
 	}

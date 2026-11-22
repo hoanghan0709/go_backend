@@ -1,0 +1,146 @@
+erDiagram
+    users {
+        integer id PK
+        datetime created_at
+        datetime updated_at
+        datetime deleted_at
+        text name
+        text email
+        text password
+        text role
+    }
+    refresh_tokens {
+        integer id PK
+        integer user_id FK
+        text token_hash
+        datetime expires_at
+        datetime revoked_at
+        datetime created_at
+        datetime updated_at
+        datetime deleted_at
+    }
+    categories {
+        integer id PK
+        datetime created_at
+        datetime updated_at
+        datetime deleted_at
+        text name
+        text description
+    }
+    questions {
+        integer id PK
+        datetime created_at
+        datetime updated_at
+        datetime deleted_at
+        text title
+        text content
+        text image
+        numeric is_critical
+        integer position
+        varchar license_type
+        integer category_id FK
+        text explanation
+        numeric published
+        text source_url
+    }
+    answers {
+        integer id PK
+        datetime created_at
+        datetime updated_at
+        datetime deleted_at
+        text content
+        text label
+        integer order
+        numeric is_correct
+        integer question_id FK
+    }
+    tests {
+        integer id PK
+        datetime created_at
+        datetime updated_at
+        datetime deleted_at
+        text name
+        text description
+        integer duration
+        integer total_question
+        integer passing_score
+        text license_type
+        text version
+        numeric published
+        numeric critical_fail
+    }
+    test_questions {
+        integer id PK
+        datetime created_at
+        datetime updated_at
+        datetime deleted_at
+        integer test_id FK
+        integer question_id FK
+        integer order
+        real score
+    }
+    exam_sessions {
+        integer id PK
+        datetime created_at
+        datetime updated_at
+        datetime deleted_at
+        integer user_id FK
+        integer test_id FK
+        integer correct_answer
+        integer score
+        numeric is_passed
+        datetime started_at
+        datetime finished_at
+        varchar status
+        integer duration
+        text snapshot "JSON snapshot"
+        datetime expires_at
+        integer passing_score
+        numeric critical_fail
+        text failure_reason
+    }
+    user_answers {
+        integer id PK
+        datetime created_at
+        datetime updated_at
+        datetime deleted_at
+        integer exam_session_id FK
+        integer question_id FK
+        integer answer_id FK
+        numeric is_correct
+    }
+    practice_attempts {
+        integer id PK
+        integer user_id
+        integer question_id
+        integer category_id
+        text license_type
+        integer answer_id
+        numeric is_correct
+        datetime created_at
+    }
+    crawl_records {
+        integer id PK
+        text source
+        text license_type
+        integer remote_id
+        integer question_id
+        text source_url
+        text fingerprint
+        datetime created_at
+    }
+    users ||--o{ refresh_tokens : "user_id"
+    categories ||--o{ questions : "category_id"
+    questions ||--o{ answers : "question_id"
+    tests ||--o{ test_questions : "test_id"
+    questions ||--o{ test_questions : "question_id"
+    tests ||--o{ exam_sessions : "test_id"
+    users ||--o{ exam_sessions : "user_id"
+    exam_sessions ||--o{ user_answers : "exam_session_id"
+    answers ||--o{ user_answers : "answer_id"
+    questions ||--o{ user_answers : "question_id"
+    users ||..o{ practice_attempts : "logical: user_id"
+    questions ||..o{ practice_attempts : "logical: question_id"
+    categories ||..o{ practice_attempts : "logical: category_id"
+    answers ||..o{ practice_attempts : "logical: answer_id"
+    questions ||..o{ crawl_records : "logical: question_id"

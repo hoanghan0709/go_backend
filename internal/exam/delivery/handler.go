@@ -1,13 +1,7 @@
 package delivery
 
-import "github.com/gin-gonic/gin"
+import "github.com/han/go-ecommerce/internal/exam/usecase"
 
-type Usecase interface{}
+type Handler struct{ usecase usecase.Interface }
 
-type Handler struct {
-	usecase Usecase
-}
-
-func New(usecase Usecase) *Handler {
-	return &Handler{usecase: usecase}
-}
+func New(u usecase.Interface) *Handler { return &Handler{usecase: u} }

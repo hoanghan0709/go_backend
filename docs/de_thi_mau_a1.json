@@ -1,0 +1,452 @@
+{
+  "category": {
+    "id": 8,
+    "created_at": "2026-10-25T23:00:48.962806+07:00",
+    "updated_at": "2026-10-25T23:00:48.962806+07:00",
+    "name": "Demo - Đề thi thử A1 5 câu",
+    "description": "Bản sao câu nguồn để thử API; không phải bộ đề chính thức"
+  },
+  "questions": [
+    {
+      "id": 854,
+      "created_at": "2026-10-25T23:00:48.964175+07:00",
+      "updated_at": "2026-10-25T23:00:48.965705+07:00",
+      "title": "Demo A1 - Câu 1",
+      "content": "Phần của đường bộ được sử dụng cho phương tiện giao thông đường bộ đi lại là gì?",
+      "image": "",
+      "explanation": "Theo khoản 5 Điều 2 Luật Trật tự, an toàn giao thông đường bộ 2024 (Luật TTATGTĐB), phần đường xe chạy là phần của đường bộ dùng cho phương tiện đi lại. Lề đường không thuộc phần đường xe chạy.",
+      "source_url": "https://hoclaixeonline.com/cau-hoi/1",
+      "published": true,
+      "is_critical": false,
+      "position": 1,
+      "license_type": "A1",
+      "category_id": 8,
+      "category": {
+        "id": 8,
+        "created_at": "2026-10-25T23:00:48.962806+07:00",
+        "updated_at": "2026-10-25T23:00:48.962806+07:00",
+        "name": "Demo - Đề thi thử A1 5 câu",
+        "description": "Bản sao câu nguồn để thử API; không phải bộ đề chính thức"
+      },
+      "answers": [
+        {
+          "id": 2655,
+          "created_at": "2026-10-25T23:00:48.96462+07:00",
+          "updated_at": "2026-10-25T23:00:48.96462+07:00",
+          "content": "Phần mặt đường và lề đường.",
+          "label": "A",
+          "order": 1,
+          "is_correct": false,
+          "question_id": 854
+        },
+        {
+          "id": 2656,
+          "created_at": "2026-10-25T23:00:48.96462+07:00",
+          "updated_at": "2026-10-25T23:00:48.96462+07:00",
+          "content": "Phần đường xe chạy.",
+          "label": "B",
+          "order": 2,
+          "is_correct": true,
+          "question_id": 854
+        },
+        {
+          "id": 2657,
+          "created_at": "2026-10-25T23:00:48.96462+07:00",
+          "updated_at": "2026-10-25T23:00:48.96462+07:00",
+          "content": "Phần đường xe cơ giới.",
+          "label": "C",
+          "order": 3,
+          "is_correct": false,
+          "question_id": 854
+        }
+      ]
+    },
+    {
+      "id": 855,
+      "created_at": "2026-10-25T23:00:48.965993+07:00",
+      "updated_at": "2026-10-25T23:00:48.966159+07:00",
+      "title": "Demo A1 - Câu 2",
+      "content": "Làn đường là gì?",
+      "image": "",
+      "explanation": "Khoản 6 Điều 2 Luật TTATGTĐB: làn đường là một phần của phần đường xe chạy, chia theo chiều dọc, có đủ chiều rộng cho xe chạy an toàn. Ý 1 thiếu cụm “đủ chiều rộng… an toàn”.",
+      "source_url": "https://hoclaixeonline.com/cau-hoi/2",
+      "published": true,
+      "is_critical": false,
+      "position": 2,
+      "license_type": "A1",
+      "category_id": 8,
+      "category": {
+        "id": 8,
+        "created_at": "2026-10-25T23:00:48.962806+07:00",
+        "updated_at": "2026-10-25T23:00:48.962806+07:00",
+        "name": "Demo - Đề thi thử A1 5 câu",
+        "description": "Bản sao câu nguồn để thử API; không phải bộ đề chính thức"
+      },
+      "answers": [
+        {
+          "id": 2658,
+          "created_at": "2026-10-25T23:00:48.966056+07:00",
+          "updated_at": "2026-10-25T23:00:48.966056+07:00",
+          "content": "Là một phần của phần đường xe chạy được chia theo chiều dọc của đường, sử dụng cho xe chạy.",
+          "label": "A",
+          "order": 1,
+          "is_correct": false,
+          "question_id": 855
+        },
+        {
+          "id": 2659,
+          "created_at": "2026-10-25T23:00:48.966056+07:00",
+          "updated_at": "2026-10-25T23:00:48.966056+07:00",
+          "content": "Là một phần của phần đường xe chạy được chia theo chiều dọc của đường, có đủ chiều rộng cho xe chạy an toàn.",
+          "label": "B",
+          "order": 2,
+          "is_correct": true,
+          "question_id": 855
+        },
+        {
+          "id": 2660,
+          "created_at": "2026-10-25T23:00:48.966056+07:00",
+          "updated_at": "2026-10-25T23:00:48.966056+07:00",
+          "content": "Là đường cho xe ô tô chạy, dừng, đỗ an toàn.",
+          "label": "C",
+          "order": 3,
+          "is_correct": false,
+          "question_id": 855
+        }
+      ]
+    },
+    {
+      "id": 856,
+      "created_at": "2026-10-25T23:00:48.967997+07:00",
+      "updated_at": "2026-10-25T23:00:48.968546+07:00",
+      "title": "Demo A1 - Câu 3",
+      "content": "Khổ giới hạn của đường bộ được hiểu như thế nào là đúng?",
+      "image": "",
+      "explanation": "Khổ giới hạn gồm cả chiều rộng lẫn chiều cao của đường bộ để xe và hàng hóa trên xe đi qua an toàn, xác định theo quy chuẩn, tiêu chuẩn kỹ thuật. Ý 2 chỉ nói chiều rộng, ý 3 chỉ nói chiều cao nên đều thiếu.",
+      "source_url": "https://hoclaixeonline.com/cau-hoi/3",
+      "published": true,
+      "is_critical": false,
+      "position": 3,
+      "license_type": "A1",
+      "category_id": 8,
+      "category": {
+        "id": 8,
+        "created_at": "2026-10-25T23:00:48.962806+07:00",
+        "updated_at": "2026-10-25T23:00:48.962806+07:00",
+        "name": "Demo - Đề thi thử A1 5 câu",
+        "description": "Bản sao câu nguồn để thử API; không phải bộ đề chính thức"
+      },
+      "answers": [
+        {
+          "id": 2661,
+          "created_at": "2026-10-25T23:00:48.968077+07:00",
+          "updated_at": "2026-10-25T23:00:48.968077+07:00",
+          "content": "Khổ giới hạn của đường bộ là khoảng trống có kích thước giới hạn về chiều rộng, chiều cao của đường bộ để các xe, bao gồm cả hàng hoá xếp trên xe đi qua được an toàn và được xác định theo quy chuẩn, tiêu chuẩn kỹ thuật của đường bộ.",
+          "label": "A",
+          "order": 1,
+          "is_correct": true,
+          "question_id": 856
+        },
+        {
+          "id": 2662,
+          "created_at": "2026-10-25T23:00:48.968077+07:00",
+          "updated_at": "2026-10-25T23:00:48.968077+07:00",
+          "content": "Là khoảng trống có kích thước giới hạn về chiều rộng của đường, cầu, bến phà, hầm trên đường b ộ để các xe kể cả hàng hóa xếp trên xe đi qua được an toàn.",
+          "label": "B",
+          "order": 2,
+          "is_correct": false,
+          "question_id": 856
+        },
+        {
+          "id": 2663,
+          "created_at": "2026-10-25T23:00:48.968077+07:00",
+          "updated_at": "2026-10-25T23:00:48.968077+07:00",
+          "content": "Là khoảng trống có kích thước giới hạn về chiều cao của cầu, bến phà, hầm trên đường bộ để các xe đi qua được an toàn.",
+          "label": "C",
+          "order": 3,
+          "is_correct": false,
+          "question_id": 856
+        }
+      ]
+    },
+    {
+      "id": 857,
+      "created_at": "2026-10-25T23:00:48.968842+07:00",
+      "updated_at": "2026-10-25T23:00:48.969689+07:00",
+      "title": "Demo A1 - Câu 4",
+      "content": "Dải phân cách được lắp đặt để làm gì?",
+      "image": "",
+      "explanation": "Dải phân cách dùng để chia phần đường xe chạy thành hai chiều riêng biệt, hoặc tách phần đường của xe cơ giới với xe thô sơ hay của nhiều loại xe khác nhau trên cùng một chiều.",
+      "source_url": "https://hoclaixeonline.com/cau-hoi/4",
+      "published": true,
+      "is_critical": false,
+      "position": 4,
+      "license_type": "A1",
+      "category_id": 8,
+      "category": {
+        "id": 8,
+        "created_at": "2026-10-25T23:00:48.962806+07:00",
+        "updated_at": "2026-10-25T23:00:48.962806+07:00",
+        "name": "Demo - Đề thi thử A1 5 câu",
+        "description": "Bản sao câu nguồn để thử API; không phải bộ đề chính thức"
+      },
+      "answers": [
+        {
+          "id": 2664,
+          "created_at": "2026-10-25T23:00:48.969004+07:00",
+          "updated_at": "2026-10-25T23:00:48.969004+07:00",
+          "content": "Để phân chia các làn đường dành cho xe cơ giới và xe thô sơ trên đường cao tốc.",
+          "label": "A",
+          "order": 1,
+          "is_correct": false,
+          "question_id": 857
+        },
+        {
+          "id": 2665,
+          "created_at": "2026-10-25T23:00:48.969004+07:00",
+          "updated_at": "2026-10-25T23:00:48.969004+07:00",
+          "content": "Để phân chia phần đường xe chạy thành hai chiều riêng biệt hoặc để phân chia phần đường dành cho xe cơ giới và xe thô sơ hoặc của nhiều loại xe khác nhau trên cùng một chiều đường.",
+          "label": "B",
+          "order": 2,
+          "is_correct": true,
+          "question_id": 857
+        },
+        {
+          "id": 2666,
+          "created_at": "2026-10-25T23:00:48.969004+07:00",
+          "updated_at": "2026-10-25T23:00:48.969004+07:00",
+          "content": "Để phân tách phần đường xe chạy và hành lang an toàn giao thông.",
+          "label": "C",
+          "order": 3,
+          "is_correct": false,
+          "question_id": 857
+        }
+      ]
+    },
+    {
+      "id": 858,
+      "created_at": "2026-10-25T23:00:48.970617+07:00",
+      "updated_at": "2026-10-25T23:00:48.971229+07:00",
+      "title": "Demo A1 - Câu 5",
+      "content": "Hành vi nào dưới đây bị nghiêm cấm?",
+      "image": "",
+      "explanation": "Khoản 20 Điều 9 Luật TTATGTĐB nghiêm cấm rải vật sắc nhọn, đổ chất gây trơn trượt trên đường bộ. Đi xe đạp trên quốc lộ không bị cấm (chỉ đường cao tốc mới cấm xe thô sơ).",
+      "source_url": "https://hoclaixeonline.com/cau-hoi/19",
+      "published": true,
+      "is_critical": true,
+      "position": 5,
+      "license_type": "A1",
+      "category_id": 8,
+      "category": {
+        "id": 8,
+        "created_at": "2026-10-25T23:00:48.962806+07:00",
+        "updated_at": "2026-10-25T23:00:48.962806+07:00",
+        "name": "Demo - Đề thi thử A1 5 câu",
+        "description": "Bản sao câu nguồn để thử API; không phải bộ đề chính thức"
+      },
+      "answers": [
+        {
+          "id": 2667,
+          "created_at": "2026-10-25T23:00:48.97071+07:00",
+          "updated_at": "2026-10-25T23:00:48.97071+07:00",
+          "content": "Sử dụng xe đạp đi trên các tuyến quốc lộ.",
+          "label": "A",
+          "order": 1,
+          "is_correct": false,
+          "question_id": 858
+        },
+        {
+          "id": 2668,
+          "created_at": "2026-10-25T23:00:48.97071+07:00",
+          "updated_at": "2026-10-25T23:00:48.97071+07:00",
+          "content": "Rải vật sắc nhọn, đổ chất gây trơn trượt trên đường bộ.",
+          "label": "B",
+          "order": 2,
+          "is_correct": true,
+          "question_id": 858
+        },
+        {
+          "id": 2669,
+          "created_at": "2026-10-25T23:00:48.97071+07:00",
+          "updated_at": "2026-10-25T23:00:48.97071+07:00",
+          "content": "Cả hai ý trên.",
+          "label": "C",
+          "order": 3,
+          "is_correct": false,
+          "question_id": 858
+        }
+      ]
+    }
+  ],
+  "test": {
+    "id": 2,
+    "created_at": "2026-10-25T23:00:48.973112+07:00",
+    "updated_at": "2026-10-25T23:00:48.973112+07:00",
+    "license_type": "A1",
+    "version": "demo-v1",
+    "published": true,
+    "critical_fail": true,
+    "name": "Đề mẫu A1 - 5 câu",
+    "description": "Đề demo kiểm thử API: 4 câu thường, 1 câu điểm liệt; sao chép từ ngân hàng hiện có, không phải cấu hình thi chính thức.",
+    "duration_minutes": 10,
+    "total_questions": 5,
+    "passing_score": 4,
+    "questions": [
+      {
+        "id": 3,
+        "created_at": "2026-10-25T23:00:48.9737+07:00",
+        "updated_at": "2026-10-25T23:00:48.9737+07:00",
+        "test_id": 2,
+        "question_id": 854,
+        "order": 1,
+        "score": 1,
+        "question": {
+          "id": 0,
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "title": "",
+          "content": "",
+          "image": "",
+          "explanation": "",
+          "published": false,
+          "is_critical": false,
+          "position": 0,
+          "license_type": "",
+          "category_id": 0,
+          "category": {
+            "id": 0,
+            "created_at": "0001-01-01T00:00:00Z",
+            "updated_at": "0001-01-01T00:00:00Z",
+            "name": "",
+            "description": ""
+          },
+          "answers": null
+        }
+      },
+      {
+        "id": 4,
+        "created_at": "2026-10-25T23:00:48.9737+07:00",
+        "updated_at": "2026-10-25T23:00:48.9737+07:00",
+        "test_id": 2,
+        "question_id": 855,
+        "order": 2,
+        "score": 1,
+        "question": {
+          "id": 0,
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "title": "",
+          "content": "",
+          "image": "",
+          "explanation": "",
+          "published": false,
+          "is_critical": false,
+          "position": 0,
+          "license_type": "",
+          "category_id": 0,
+          "category": {
+            "id": 0,
+            "created_at": "0001-01-01T00:00:00Z",
+            "updated_at": "0001-01-01T00:00:00Z",
+            "name": "",
+            "description": ""
+          },
+          "answers": null
+        }
+      },
+      {
+        "id": 5,
+        "created_at": "2026-10-25T23:00:48.9737+07:00",
+        "updated_at": "2026-10-25T23:00:48.9737+07:00",
+        "test_id": 2,
+        "question_id": 856,
+        "order": 3,
+        "score": 1,
+        "question": {
+          "id": 0,
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "title": "",
+          "content": "",
+          "image": "",
+          "explanation": "",
+          "published": false,
+          "is_critical": false,
+          "position": 0,
+          "license_type": "",
+          "category_id": 0,
+          "category": {
+            "id": 0,
+            "created_at": "0001-01-01T00:00:00Z",
+            "updated_at": "0001-01-01T00:00:00Z",
+            "name": "",
+            "description": ""
+          },
+          "answers": null
+        }
+      },
+      {
+        "id": 6,
+        "created_at": "2026-10-25T23:00:48.9737+07:00",
+        "updated_at": "2026-10-25T23:00:48.9737+07:00",
+        "test_id": 2,
+        "question_id": 857,
+        "order": 4,
+        "score": 1,
+        "question": {
+          "id": 0,
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "title": "",
+          "content": "",
+          "image": "",
+          "explanation": "",
+          "published": false,
+          "is_critical": false,
+          "position": 0,
+          "license_type": "",
+          "category_id": 0,
+          "category": {
+            "id": 0,
+            "created_at": "0001-01-01T00:00:00Z",
+            "updated_at": "0001-01-01T00:00:00Z",
+            "name": "",
+            "description": ""
+          },
+          "answers": null
+        }
+      },
+      {
+        "id": 7,
+        "created_at": "2026-10-25T23:00:48.9737+07:00",
+        "updated_at": "2026-10-25T23:00:48.9737+07:00",
+        "test_id": 2,
+        "question_id": 858,
+        "order": 5,
+        "score": 1,
+        "question": {
+          "id": 0,
+          "created_at": "0001-01-01T00:00:00Z",
+          "updated_at": "0001-01-01T00:00:00Z",
+          "title": "",
+          "content": "",
+          "image": "",
+          "explanation": "",
+          "published": false,
+          "is_critical": false,
+          "position": 0,
+          "license_type": "",
+          "category_id": 0,
+          "category": {
+            "id": 0,
+            "created_at": "0001-01-01T00:00:00Z",
+            "updated_at": "0001-01-01T00:00:00Z",
+            "name": "",
+            "description": ""
+          },
+          "answers": null
+        }
+      }
+    ]
+  }
+}

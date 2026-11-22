@@ -4,7 +4,6 @@ new:
 	@mkdir -p internal/$(name)/{delivery,usecase,repository,model,dto,errors}
 
 	@printf 'package delivery\n\nimport "github.com/gin-gonic/gin"\n\n\
-type Usecase interface{}\n\n\
 type Handler struct {\n\tusecase Usecase\n}\n\n\
 func New(usecase Usecase) *Handler {\n\treturn &Handler{usecase: usecase}\n}\n' \
 > internal/$(name)/delivery/handler.go

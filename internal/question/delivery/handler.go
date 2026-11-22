@@ -1,13 +1,72 @@
 package delivery
 
-// import "github.com/gin-gonic/gin"
+import (
+	"errors"
+	"github.com/han/go-ecommerce/internal/common/httpapi"
+	"github.com/han/go-ecommerce/internal/learning"
+	"net/http"
 
-// type Usecase interface{}
+	"github.com/gin-gonic/gin"
+	common "github.com/han/go-ecommerce/internal/common/model"
+	"github.com/han/go-ecommerce/internal/question/dto"
+	questionErrors "github.com/han/go-ecommerce/internal/question/errors"
+	"github.com/han/go-ecommerce/internal/question/usecase"
+)
 
-// type Handler struct {
-// 	usecase Usecase
-// }
+type Handler struct {
+	usecase usecase.QuestionService
+}
 
-// func New(usecase Usecase) *Handler {
-// 	return &Handler{usecase: usecase}
-// }
+func New(usecase usecase.QuestionService) *Handler {
+	return &Handler{usecase: usecase}
+}
+
+func (h *Handler) GetListQuestion(c *gin.Context) {
+	listQuestion, err := h.usecase.GetListQuestion()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, common.Response{
+			StatusCode: http.StatusInternalServerError,
+			Message:    err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, dto.ToListQuestionResponse(listQuestion))
+}
+
+func (h *Handler) CreateQuestion(c *gin.Context) {
+	var req dto.CreateQuestionRequest
+
+	if !httpapi.Bind(c, &req) {
+		return
+	}
+
+	if err := h.usecase.CreateQuestion(&req); err != nil {
+		if errors.Is(err, learning.ErrInvalid) {
+			httpapi.Error(c, err)
+			return
+		}
+		if errors.Is(err, questionErrors.ErrInvalidAnswers) ||
+			errors.Is(err, questionErrors.ErrDuplicateAnswerLabel) ||
+			errors.Is(err, questionErrors.ErrDuplicateAnswerContent) ||
+			errors.Is(err, questionErrors.ErrDuplicateAnswerOrder) ||
+			errors.Is(err, questionErrors.ErrInvalidCorrectAnswer) {
+			c.JSON(http.StatusBadRequest, common.Response{
+				StatusCode: http.StatusBadRequest,
+				Message:    err.Error(),
+			})
+			return
+		}
+
+		c.JSON(http.StatusInternalServerError, common.Response{
+			StatusCode: http.StatusInternalServerError,
+			Message:    err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusCreated, common.Response{
+		StatusCode: http.StatusCreated,
+		Message:    "Create question success",
+	})
+}
