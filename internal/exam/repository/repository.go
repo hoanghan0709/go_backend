@@ -1,11 +1,11 @@
 package repository
 
 import (
-	"github.com/han/go-ecommerce/internal/learning"
 	"time"
 
 	"github.com/han/go-ecommerce/internal/common/enums"
 	exam "github.com/han/go-ecommerce/internal/exam/model"
+	"github.com/han/go-ecommerce/internal/learning"
 	"gorm.io/gorm"
 )
 
@@ -28,11 +28,17 @@ func (r *Repository) HistoryFiltered(user uint, f learning.Filter) ([]exam.ExamS
 	page, limit := f.Bounds()
 	db := r.DB.Model(&exam.ExamSession{}).Where("user_id = ?", user)
 	// Filters use immutable snapshot metadata, not today's template/question data.
+	licenseFilter := "json_extract(snapshot, '$.license_type') = ?"
+	categoryFilter := "json_extract(snapshot, '$.category_type') = ?"
+	if db.Dialector.Name() == "postgres" {
+		licenseFilter = "CAST(NULLIF(snapshot, '') AS jsonb) ->> 'license_type' = ?"
+		categoryFilter = "CAST(NULLIF(snapshot, '') AS jsonb) ->> 'category_type' = ?"
+	}
 	if f.License != "" {
-		db = db.Where("json_extract(snapshot, '$.license_type') = ?", f.License)
+		db = db.Where(licenseFilter, f.License)
 	}
 	if f.CategoryType != "" {
-		db = db.Where("json_extract(snapshot, '$.category_type') = ?", f.CategoryType)
+		db = db.Where(categoryFilter, f.CategoryType)
 	}
 	if f.Status != "" {
 		db = db.Where("status = ?", f.Status)

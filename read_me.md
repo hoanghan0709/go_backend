@@ -27,10 +27,13 @@ Biến môi trường:
 | Biến | Mặc định | Ý nghĩa |
 |---|---|---|
 | `JWT_SECRET` | Không có, bắt buộc | Khóa ký access token |
-| `DATABASE_PATH` | `cmd/data/gorm.db` | Đường dẫn SQLite; thư mục cha phải tồn tại |
+| `DATABASE_URL` | Trống | Chuỗi kết nối PostgreSQL; được ưu tiên khi đã đặt |
+| `DATABASE_PATH` | Có trong `.env.example` | Đường dẫn SQLite cho local khi `DATABASE_URL` trống; thư mục cha phải tồn tại |
 | `LISTEN_ADDR` | `:8080` | Địa chỉ HTTP |
 
 `GET /health` kiểm tra HTTP server. Các API học/thi cần header `Authorization: Bearer <access_token>`.
+
+Trên Render, đặt `DATABASE_URL` và `JWT_SECRET` trong **Environment** của Web Service. Nếu dùng Render Postgres cùng vùng, lấy **Internal Database URL**. Server tạo bảng khi khởi động. Dữ liệu đang có trong SQLite cần được nhập riêng vào PostgreSQL.
 
 ## Tạo quản trị viên
 
@@ -41,7 +44,7 @@ Biến môi trường:
 go run ./cmd/admin -email admin@example.com -role admin
 ```
 
-Thu hồi quyền bằng cùng lệnh với `-role learner`. CLI chỉ đổi quyền tài khoản đã tồn tại; không tạo tài khoản hay mật khẩu. Đăng ký luôn tạo `learner`, không chấp nhận quyền do client gửi. Quyền admin được kiểm tra từ DB trên mỗi request, nên thu hồi có hiệu lực ngay với token cũ.
+CLI cần dùng cùng `DATABASE_URL` hoặc `DATABASE_PATH` với server. Thu hồi quyền bằng cùng lệnh với `-role learner`. CLI chỉ đổi quyền tài khoản đã tồn tại; không tạo tài khoản hay mật khẩu. Đăng ký luôn tạo `learner`, không chấp nhận quyền do client gửi. Quyền admin được kiểm tra từ DB trên mỗi request, nên thu hồi có hiệu lực ngay với token cũ.
 
 ## Chuẩn bị nội dung và dùng thử
 

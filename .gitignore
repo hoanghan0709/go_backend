@@ -13,4 +13,6 @@ Thumbs.db
 # Thư mục IDE
 .idea/
 .vscode/
+.agents/
+node_modules/
 __debug_bin*

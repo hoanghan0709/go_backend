@@ -2,11 +2,14 @@ package server_test
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
+	"os"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -42,7 +45,8 @@ type fixture struct {
 
 func setup(t *testing.T) *fixture {
 	t.Helper()
-	db, err := database.InitDB(filepath.Join(t.TempDir(), "test.db"))
+	dsn, sqlitePath := testDatabaseConfig(t)
+	db, err := database.Open(dsn, sqlitePath)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -85,6 +89,37 @@ func setup(t *testing.T) *fixture {
 	}
 	return f
 }
+
+func testDatabaseConfig(t *testing.T) (dsn, sqlitePath string) {
+	t.Helper()
+	dsn = os.Getenv("TEST_POSTGRES_URL")
+	if dsn == "" {
+		return "", filepath.Join(t.TempDir(), "test.db")
+	}
+	parsed, err := url.Parse(dsn)
+	if err != nil || (parsed.Scheme != "postgres" && parsed.Scheme != "postgresql") {
+		t.Fatal("TEST_POSTGRES_URL must be a PostgreSQL URL")
+	}
+	conn, err := sql.Open("pgx", dsn)
+	if err != nil {
+		t.Fatal("could not open TEST_POSTGRES_URL")
+	}
+	t.Cleanup(func() { _ = conn.Close() })
+	schema := fmt.Sprintf("test_%d_%d", os.Getpid(), time.Now().UnixNano())
+	_, err = conn.Exec("CREATE SCHEMA " + schema)
+	requireNoError(t, err)
+	t.Cleanup(func() {
+		_, err := conn.Exec("DROP SCHEMA " + schema + " CASCADE")
+		if err != nil {
+			t.Errorf("clean up PostgreSQL test schema: %v", err)
+		}
+	})
+	params := parsed.Query()
+	params.Set("search_path", schema)
+	parsed.RawQuery = params.Encode()
+	return parsed.String(), ""
+}
+
 func requireNoError(t *testing.T, err error) {
 	t.Helper()
 	if err != nil {
@@ -387,6 +422,16 @@ func TestHistoryExpiresAndIncludesUnansweredInWrongQuestions(t *testing.T) {
 	requireNoError(t, err)
 	if total != 1 || history[0].Status != enums.ExamTimeout {
 		t.Fatal("history did not expire exam")
+	}
+	_, total, err = f.exams.HistoryFiltered(f.user.ID, learning.Filter{License: f.test.LicenseType})
+	requireNoError(t, err)
+	if total != 1 {
+		t.Fatalf("license filter returned %d attempts, want 1", total)
+	}
+	_, total, err = f.exams.HistoryFiltered(f.user.ID, learning.Filter{CategoryType: "different-category"})
+	requireNoError(t, err)
+	if total != 0 {
+		t.Fatalf("category filter returned %d attempts, want 0", total)
 	}
 	progress, err := f.service.Progress(f.user.ID, "")
 	requireNoError(t, err)

@@ -6,7 +6,8 @@ type Answer struct {
 	common.BaseModel
 	Content string `gorm:"type:text;not null" json:"content"`
 
-	Label string `gorm:"size:2;not null;uniqueIndex:idx_answers_question_label" json:"label"`
+	// Archived answers use an internal label of the form archived-<id>.
+	Label string `gorm:"size:32;not null;uniqueIndex:idx_answers_question_label" json:"label"`
 
 	Order int `gorm:"not null;uniqueIndex:idx_answers_question_order" json:"order"`
 
