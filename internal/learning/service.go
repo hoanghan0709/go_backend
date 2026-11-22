@@ -46,7 +46,9 @@ type AnswerInput struct {
 }
 
 // LicenseTypes is the catalog supported by the application's question bank.
-func LicenseTypes() []string { return []string{"A1", "A", "B", "C1", "C", "D"} }
+func LicenseTypes() []string {
+	return []string{"A1", "A", "B1", "B", "C1", "C", "D1", "D2", "D", "BE", "C1E", "CE", "D1E", "D2E", "DE"}
+}
 
 func ValidLicense(l string) bool {
 	for _, code := range LicenseTypes() {
@@ -65,7 +67,7 @@ func questionFrom(in QuestionInput) (question.Question, error) {
 		return q, Invalid("content must not be blank")
 	}
 	if !ValidLicense(string(q.LicenseType)) {
-		return q, Invalid("license_type must be one of A1, A, B, C1, C, D")
+		return q, Invalid("invalid license_type")
 	}
 	if q.CategoryID == 0 {
 		return q, Invalid("category_id must be a positive integer")
@@ -488,7 +490,7 @@ func validateTestConfig(in TestInput, n int) error {
 		return Invalid("version must not be blank")
 	}
 	if !ValidLicense(in.LicenseType) {
-		return Invalid("license_type must be one of A1, A, B, C1, C, D")
+		return Invalid("invalid license_type")
 	}
 	if in.Duration < 1 || in.Duration > 180 {
 		return Invalid("duration_minutes must be between 1 and 180")

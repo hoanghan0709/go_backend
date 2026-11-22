@@ -60,7 +60,7 @@ Tạo/sửa câu hỏi:
 }
 ```
 
-- Hạng bằng được code hỗ trợ: `A1`, `A`, `B`, `C1`, `C`, `D`. Đây là danh sách của ứng dụng; không phải tài liệu quy định pháp luật.
+- `GET /api/v1/license-types` trả danh mục hạng bằng mà ứng dụng hỗ trợ: `A1`, `A`, `B1`, `B`, `C1`, `C`, `D1`, `D2`, `D`, `BE`, `C1E`, `CE`, `D1E`, `D2E`, `DE`.
 - Chủ đề phải tồn tại; tiêu đề/nội dung không được chỉ chứa khoảng trắng.
 - Có ít nhất hai đáp án; nhãn, nội dung và thứ tự không trùng; đúng một đáp án đúng. Nhãn chuẩn hóa thành chữ hoa; nội dung được trim.
 - Câu hỏi xuất bản cần lời giải. Có thể dùng PUT để xuất bản hoặc đưa lại về bản nháp.

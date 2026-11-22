@@ -72,7 +72,7 @@ func Filter(c *gin.Context) (learning.Filter, bool) {
 		f.Published = &v
 	}
 	if f.License != "" && !learning.ValidLicense(f.License) {
-		c.JSON(400, gin.H{"message": "license_type must be one of A1, A, B, C1, C, D"})
+		c.JSON(400, gin.H{"message": "invalid license_type"})
 		return f, false
 	}
 	for _, name := range []string{"page", "limit", "category_id", "road_sign_id"} {

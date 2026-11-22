@@ -51,7 +51,7 @@ func (r *Repository) GetListQuestion() ([]model.Question, error) {
 func (r *Repository) CreateQuestion(question *model.Question) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
 		if !learning.ValidLicense(string(question.LicenseType)) {
-			return learning.Invalid("license_type must be one of A1, A, B, C1, C, D")
+			return learning.Invalid("invalid license_type")
 		}
 		if strings.TrimSpace(question.Title) == "" {
 			return learning.Invalid("title must not be blank")

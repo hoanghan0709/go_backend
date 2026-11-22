@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/han/go-ecommerce/internal/database"
@@ -31,7 +32,9 @@ func main() {
 	if address == "" {
 		address = ":8080"
 	}
-	if err = server.NewRouter(db, jwt).Run(address); err != nil {
+	router := server.NewRouter(db, jwt)
+	router.Static("/media/gplx", filepath.Join(filepath.Dir(path), "media", "gplx"))
+	if err = router.Run(address); err != nil {
 		log.Fatal(err)
 	}
 }

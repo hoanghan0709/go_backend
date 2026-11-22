@@ -1,8 +1,9 @@
 'use strict';
+const backendPrefix = new URL('../', document.currentScript.src).pathname.replace(/\/$/, '');
 const $ = (s, root = document) => root.querySelector(s);
 const $$ = (s, root = document) => [...root.querySelectorAll(s)];
 const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const licenses = ['A1','A','B','C1','C','D'];
+const licenses = ['A1','A','B1','B','C1','C','D1','D2','D','BE','C1E','CE','D1E','D2E','DE'];
 const categoryTypes=['UNCATEGORIZED','CONCEPT','RULE','SIGN','SA_HINH','CULTURE','TECHNIQUE','STRUCTURE'];
 const signTypes=['PROHIBITION','WARNING','MANDATORY','INFORMATION','SUPPLEMENTARY','OTHER'];
 const titles = {signs:'Học biển báo',templates:'Cấu hình đề random',overview:'Tổng quan',questions:'Ngân hàng câu hỏi',categories:'Chủ đề',tests:'Đề thi',import:'Nhập dữ liệu',api:'Danh mục API'};
@@ -19,7 +20,7 @@ async function request(path, method = 'GET', body, retry = true) {
  if (session?.access_token) headers.Authorization = `Bearer ${session.access_token}`;
  if (body !== undefined) headers['Content-Type'] = 'application/json';
  let response;
- try { response = await fetch(path, {method, headers, body:body === undefined ? undefined : JSON.stringify(body)}); }
+ try { response = await fetch(backendPrefix + path, {method, headers, body:body === undefined ? undefined : JSON.stringify(body)}); }
  catch { throw new Error('Không kết nối được backend. Kiểm tra server rồi thử lại.'); }
  if (response.status === 401 && retry && session?.refresh_token && !path.startsWith('/auth/')) {
   if (!refreshPromise) {
@@ -155,7 +156,7 @@ async function publishQuestions() {
 function importPage() {return heading('Nhập dữ liệu','Bổ sung ngân hàng câu hỏi từ file JSON hoặc nguồn crawl được cấu hình.')+`<div class="grid2"><section class="card"><span class="eyebrow">01 / TỪ FILE</span><h2>Import câu hỏi JSON</h2><p class="muted">Tối đa 500 câu và 5 MiB mỗi lần. Một câu lỗi sẽ hủy toàn bộ lô nhập.</p><label>Chọn file JSON<input id="import-file" type="file" accept=".json,application/json"></label><label>Hoặc dán JSON<textarea id="import-json" rows="10" placeholder='{"questions": [...]}'></textarea></label><div class="actions">${actionButton('download-template','Tải mẫu JSON')}${actionButton('import','Kiểm tra và nhập','class="primary"')}</div><p class="muted">Nhập lại file sẽ tạo câu mới; chức năng import không tự chống trùng nội dung.</p></section><section class="card"><span class="eyebrow">02 / TỪ NGUỒN CẤU HÌNH</span><h2>Cào bộ câu hỏi A1 / B</h2><p class="muted">Lấy nội dung từ HocLaixeOnline, tự tạo chủ đề và lưu câu hỏi dưới dạng bản nháp để bạn rà soát.</p><div class="notice">Có chống nhập trùng theo nguồn và hạng. Ảnh được lưu dưới dạng URL. Tác vụ có thể mất thời gian tùy kết nối nguồn.</div>${actionButton('crawl','Bắt đầu cào dữ liệu','class="primary"')}<p class="muted">Sau khi thành công, chờ ít nhất 60 giây trước khi chạy lại.</p></section></div><section class="card"><h3>Kết quả thao tác</h3><pre id="import-result">Chưa chạy tác vụ.</pre></section>`;}
 async function apiPage() {
  const data=await request('/admin/api.json');
- return heading('Danh mục REST API',`${data.length} endpoint hiện có · Chú thích chức năng và quyền truy cập.`)+`<div class="notice">Base URL: ${esc(location.origin)}. Các API cần đăng nhập sử dụng header Authorization: Bearer &lt;access_token&gt;. API legacy được giữ nguyên tên để tương thích.</div>`+ [...new Set(data.map(r=>r.group))].map(group=>`<section class="card"><h3>${esc(group)}</h3><div class="table-wrap"><table><thead><tr><th>Method</th><th>Endpoint</th><th>Quyền</th><th>Chú thích</th></tr></thead><tbody>${data.filter(r=>r.group===group).map(r=>`<tr><td><span class="api-method">${r.method}</span></td><td><code>${esc(r.path)}</code></td><td>${esc(r.access)}</td><td>${esc(r.note)}</td></tr>`).join('')}</tbody></table></div></section>`).join('');
+ return heading('Danh mục REST API',`${data.length} endpoint hiện có · Chú thích chức năng và quyền truy cập.`)+`<div class="notice">Base URL: ${esc(location.origin + backendPrefix)}. Các API cần đăng nhập sử dụng header Authorization: Bearer &lt;access_token&gt;. API legacy được giữ nguyên tên để tương thích.</div>`+ [...new Set(data.map(r=>r.group))].map(group=>`<section class="card"><h3>${esc(group)}</h3><div class="table-wrap"><table><thead><tr><th>Method</th><th>Endpoint</th><th>Quyền</th><th>Chú thích</th></tr></thead><tbody>${data.filter(r=>r.group===group).map(r=>`<tr><td><span class="api-method">${r.method}</span></td><td><code>${esc(r.path)}</code></td><td>${esc(r.access)}</td><td>${esc(r.note)}</td></tr>`).join('')}</tbody></table></div></section>`).join('');
 }
 $('#content').addEventListener('submit',event=>{if(event.target.id!=='filters')return;event.preventDefault();if(publishing)return;publishSelection.clear();publishResult=null;filters=Object.fromEntries([...new FormData(event.target)].filter(([,v])=>v!==''));page=1;render();});
 $('#content').addEventListener('click',event=>{const b=event.target.closest('[data-action]');if(!b)return;busy(b,()=>handleAction(b));});

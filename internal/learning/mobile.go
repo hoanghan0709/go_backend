@@ -22,7 +22,7 @@ func ValidCategoryType(value string) bool {
 
 func (s *Service) SetLicense(user uint, license string) (*auth.User, error) {
 	if !ValidLicense(license) {
-		return nil, Invalid("license_type must be one of A1, A, B, C1, C, D")
+		return nil, Invalid("invalid license_type")
 	}
 	var out auth.User
 	err := s.DB.Transaction(func(tx *gorm.DB) error {

@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/han/go-ecommerce/internal/exam/dto"
-	"github.com/han/go-ecommerce/internal/learning"
 	"github.com/han/go-ecommerce/internal/server"
 )
 
@@ -22,11 +21,12 @@ func TestLicenseCatalogAndExamHistoryAfterSwitch(t *testing.T) {
 		} `json:"data"`
 	}
 	decodeBody(t, request(t, r, jwt, "GET", "/api/v1/license-types", nil), 200, &catalog)
-	if len(catalog.Data) != len(learning.LicenseTypes()) {
+	expected := []string{"A1", "A", "B1", "B", "C1", "C", "D1", "D2", "D", "BE", "C1E", "CE", "D1E", "D2E", "DE"}
+	if len(catalog.Data) != len(expected) {
 		t.Fatalf("unexpected catalog: %+v", catalog)
 	}
 	for i, item := range catalog.Data {
-		if item.Code != learning.LicenseTypes()[i] || item.Name == "" {
+		if item.Code != expected[i] || item.Name == "" {
 			t.Fatalf("invalid item: %+v", item)
 		}
 	}
