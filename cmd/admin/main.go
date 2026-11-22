@@ -3,11 +3,12 @@ package main
 
 import (
 	"flag"
+	"log"
+	"os"
+
 	auth "github.com/han/go-ecommerce/internal/auth/model"
 	"github.com/han/go-ecommerce/internal/database"
 	"github.com/joho/godotenv"
-	"log"
-	"os"
 )
 
 func main() {
@@ -18,11 +19,7 @@ func main() {
 		log.Fatal("provide -email and -role admin|learner")
 	}
 	_ = godotenv.Load()
-	path := os.Getenv("DATABASE_PATH")
-	if path == "" {
-		path = "cmd/data/gorm.db"
-	}
-	db, err := database.InitDB(path)
+	db, err := database.Open(os.Getenv("DATABASE_URL"), os.Getenv("DATABASE_PATH"))
 	if err != nil {
 		log.Fatal(err)
 	}

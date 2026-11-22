@@ -140,7 +140,8 @@ func (u *Usecase) Start(user, tid uint) (out *View, err error) {
 func load(tx *gorm.DB, user, id uint) (*exam.ExamSession, error) {
 	var s exam.ExamSession
 	// Scope theo user ngay trong query: người khác không đọc, sửa hoặc nộp hộ bài.
-	err := tx.Where("user_id = ?", user).First(&s, id).Error
+	// Serialize answer changes and submission for this session in PostgreSQL.
+	err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).Where("user_id = ?", user).First(&s, id).Error
 	return &s, err
 }
 func finish(tx *gorm.DB, s *exam.ExamSession, now time.Time, timeout bool) error {

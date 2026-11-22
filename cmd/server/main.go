@@ -17,10 +17,7 @@ func main() {
 		log.Println(".env not found, using system environment")
 	}
 	path := os.Getenv("DATABASE_PATH")
-	if path == "" {
-		path = "cmd/data/gorm.db"
-	}
-	db, err := database.InitDB(path)
+	db, err := database.Open(os.Getenv("DATABASE_URL"), path)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -33,6 +30,9 @@ func main() {
 		address = ":8080"
 	}
 	router := server.NewRouter(db, jwt)
+	if path == "" {
+		path = "cmd/data/gorm.db"
+	}
 	router.Static("/media/gplx", filepath.Join(filepath.Dir(path), "media", "gplx"))
 	if err = router.Run(address); err != nil {
 		log.Fatal(err)
